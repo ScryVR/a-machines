@@ -4,7 +4,7 @@ export const buttonMachine: IMachine = {
   name: "button",
   listeners: {
     interact: (event: any, state: Record<string, any>, emit: Function) => {
-      emit("trigger:siblings")
+      emit("trigger")
     }
   },
   metadata: {
@@ -12,7 +12,7 @@ export const buttonMachine: IMachine = {
       description: "Emit 'trigger' event to siblings"
     }
   },
-  canEmit: ["trigger:siblings"]
+  canEmit: ["trigger"]
 }
 
 export const triggerTest: IMachine = {
