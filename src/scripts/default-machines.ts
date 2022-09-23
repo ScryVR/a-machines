@@ -6,7 +6,8 @@ export const buttonMachine: IMachine = {
     interact: (event: any, state: Record<string, any>, emit: Function) => {
       emit("trigger:siblings")
     }
-  }
+  },
+  canEmit: ["trigger:siblings"]
 }
 
 export const triggerTest: IMachine = {
@@ -32,7 +33,11 @@ export const textInputMachine: IMachine = {
     interact: (event: any, state: Record<string, any>, emit: Function) => {
       emit("promptForText:builtins", { id: state.id })
     }
-  }
+  },
+  canEmit: [
+    "textChanged",
+    "promptForText:builtins"
+  ]
 }
 
 export const helloWorld: IMachine = {
