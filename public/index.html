@@ -7,14 +7,21 @@
     </script>
   </head>
   <body>
-    <a-scene>
+    <div style="z-index: 1;" id="overlay">
+    </div>
+    <a-scene webxr="overlayElement:#overlay;">
       <a-entity
         cursor="fuse: false; rayOrigin: mouse"
         raycaster="objects: [a-machine]"
       >
       </a-entity>
-      <a-box color="red" a-machine="machine: button" position="-1 1 -2"></a-box>
+      <a-box color="red" a-machine="machine: button" position="-1 1 -2">
+        <a-box color="purple" a-machine="machine: button" position="0 1 -2"></a-box>
+        <a-box color="yellow" a-machine="machine: triggerTest" position="1 1 -2"></a-box>
+      </a-box>
       <a-box color="blue" a-machine="machine: triggerTest" position="1 1 -2"></a-box>
+      <a-box color="tomato" a-machine="machine: helloWorld" position="3 2.5 -2"></a-box>
+      <a-box color="orange" a-machine="machine: textInput" position="3 1.5 -2"></a-box>
     </a-scene>
   </body>
 </html>

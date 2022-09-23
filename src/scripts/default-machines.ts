@@ -4,8 +4,7 @@ export const buttonMachine: IMachine = {
   name: "button",
   listeners: {
     interact: (event: any, state: Record<string, any>, emit: Function) => {
-      console.log("You interacted with", state.el)
-      emit("trigger")
+      emit("trigger:siblings")
     }
   }
 }
@@ -26,12 +25,12 @@ export const triggerTest: IMachine = {
 export const textInputMachine: IMachine = {
   name: "textInput",
   listeners: {
-    newText: (event: any, state: Record<string, any>, emit: Function) => {
-      state.text = event.text
+    _textChanged: (event: any, state: Record<string, any>, emit: Function) => {
+      state.text = event.detail.text
       emit("textChanged", state)
     },
     interact: (event: any, state: Record<string, any>, emit: Function) => {
-      window.postMessage({ type: "promptForText", el: state.el })
+      emit("promptForText:builtins", { id: state.id })
     }
   }
 }
@@ -40,7 +39,7 @@ export const helloWorld: IMachine = {
   name: "helloWorld",
   listeners: {
     textChanged: (event: any) => {
-      alert(`Hello ${event.text}`)
+      alert(`Hello ${event.detail.text}`)
     }
   }
 }
