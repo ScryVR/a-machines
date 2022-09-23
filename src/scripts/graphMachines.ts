@@ -72,9 +72,6 @@ function recurseSequencePath(machine: IMachine | IBuiltin, event: string, allLis
   sequenceString += `\n\t${machine.name}->>${machine.name}: ${description}`
   // Recursively add paths based on events that the machine can emit
   machine.canEmit?.forEach(event => {
-    if (event.includes("_")) {
-      console.log("should check for duplicate", event, sequenceString)
-    }
     let scopedEvent = event
     const [eventName, scope = "siblings"] = event.split(":")
     if (scope !== "builtins") {
@@ -84,7 +81,7 @@ function recurseSequencePath(machine: IMachine | IBuiltin, event: string, allLis
       const machineOrBuiltin = machineRegistry[listeningMachine] || builtinRegistry[listeningMachine.split(":")[0]]
       const duplicateLine = sequenceString.split("\n").find(str => str.startsWith(`\t${machine.name}->>${machineOrBuiltin.name}`))
       if (!duplicateLine) {
-        sequenceString += `\n\t${machine.name}->>${listeningMachine}: on "${scopedEvent}" event`
+        sequenceString += `\n\t${machine.name}->>${listeningMachine.split(":")[0]}: on "${scopedEvent}" event`
         sequenceString = recurseSequencePath(machineOrBuiltin, scopedEvent, allListeners, sequenceString)
       } else {
         console.log("Skipping adding redundant line", { machine, machineOrBuiltin, duplicateLine })

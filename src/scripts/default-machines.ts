@@ -58,16 +58,34 @@ export const textInputMachine: IMachine = {
   ]
 }
 
-export const helloWorld: IMachine = {
-  name: "helloWorld",
+export const textRenderer: IMachine = {
+  name: "textRenderer",
   listeners: {
-    textChanged: (event: any) => {
-      alert(`Hello ${event.detail.text}`)
+    textChanged: (event: any, state: Record<string, any>) => {
+      const entity: any = document.getElementById(state.id)
+      entity.setAttribute("text", { value: event.detail.text, side: "double" })
     }
   },
   metadata: {
     textChanged: {
-      description: "Show updated text in alert"
+      description: "Show text in VR environment"
+    }
+  }
+}
+
+export const movingMachine: IMachine = {
+  name: "movingMachine",
+  listeners: {
+    trigger: (event: any, state: Record<string, any>, emit: Function) => {
+      // NOTE: If I want to run this in a vertex worker, this is no good. Machines should instead invoke a builtin by emitting an event.
+      // This is okay just for development
+      const entity: any = document.getElementById(state.id)
+      entity.object3D.position.y += 0.2
+    }
+  },
+  metadata: {
+    trigger: {
+      description: "Directly modify object3D to move entity"
     }
   }
 }

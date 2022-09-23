@@ -7,9 +7,10 @@ AFRAME.registerComponent("a-machine", {
   },
   init() {
     if (!machineRegistry[this.data.machine]) {
-      throw new Error(
+      console.error(
         `a-machine could not register machine of type ${this.data.machine} - has this machine type been registered?`
       );
+      return
     }
     if (!this.el.id) {
       this.el.id = id();

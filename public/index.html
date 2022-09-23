@@ -3,8 +3,7 @@
   <head>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="./assets/scripts/bundle.js"></script>
-    <script>
-    </script>
+    <link rel="stylesheet" href="./assets/styles/main.css">
   </head>
   <body>
     <div style="z-index: 1;" id="overlay">
@@ -15,13 +14,12 @@
         raycaster="objects: [a-machine]"
       >
       </a-entity>
-      <a-box color="red" a-machine="machine: button" position="-1 1 -2">
-        <a-box color="purple" a-machine="machine: button" position="0 1 -2"></a-box>
-        <a-box color="yellow" a-machine="machine: triggerTest" position="1 1 -2"></a-box>
-      </a-box>
-      <a-box color="blue" a-machine="machine: triggerTest" position="1 1 -2"></a-box>
-      <a-box color="tomato" a-machine="machine: helloWorld" position="3 2.5 -2"></a-box>
-      <a-box color="orange" a-machine="machine: textInput" position="3 1.5 -2"></a-box>
+      <a-entity position="-1 1.5 -2.5">
+        <a-sphere radius="0.3" color="#8e8" a-machine="machine: button" position="-1 0 0"></a-sphere>
+        <a-box color="#8e8" a-machine="machine: movingMachine"></a-box>
+      </a-entity>
+      <a-entity text="color: black; align: center;" scale="2 2 2" a-machine="machine: textRenderer" position="1 2.5 -2"></a-entity>
+      <a-box color="orange" a-machine="machine: textInput" position="1 1.5 -2"></a-box>
     </a-scene>
   </body>
 </html>
