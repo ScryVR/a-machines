@@ -1,3 +1,5 @@
+import { IBuiltin } from "./default-builtins";
+
 // @ts-ignore
 AFRAME.registerComponent("a-machine", {
   schema: {
@@ -57,7 +59,7 @@ AFRAME.registerComponent("a-machine", {
     } else if (scope === "builtins") {
       if (builtinRegistry[eventName]) {
         // NOTE: Calls to built-in handlers have a different signature. Might change this later.
-        builtinRegistry[eventName]({ detail: payload });
+        builtinRegistry[eventName].listener({ detail: payload });
       } else {
         console.warn(
           `Received a call to a unregistered built-in event: ${eventName}`
@@ -75,10 +77,11 @@ AFRAME.registerComponent("a-machine", {
 export interface IMachine {
   name: string;
   listeners: Record<string, Function>;
+  metadata?: Record<string, Record<string, string>>
   canEmit?: Array<string>;
 }
 
-const machineRegistry: Record<string, IMachine> = {};
+export const machineRegistry: Record<string, IMachine> = {};
 
 export function registerMachine(machine: IMachine) {
   if (machineRegistry[machine.name]) {
@@ -89,14 +92,14 @@ export function registerMachine(machine: IMachine) {
   machineRegistry[machine.name] = machine;
 }
 
-const builtinRegistry: Record<string, Function> = {};
-export function registerBuiltin(event: string, listener: Function) {
+export const builtinRegistry: Record<string, IBuiltin> = {};
+export function registerBuiltin(event: string, builtin: IBuiltin) {
   if (builtinRegistry[event]) {
     throw new Error(
       `a-machine tried to register ${event}, but a built-in with this name is already registered`
     );
   }
-  builtinRegistry[event] = listener;
+  builtinRegistry[event] = builtin;
 }
 
 function id() {

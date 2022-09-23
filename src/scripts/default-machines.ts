@@ -7,6 +7,11 @@ export const buttonMachine: IMachine = {
       emit("trigger:siblings")
     }
   },
+  metadata: {
+    interact: {
+      description: "Emit 'trigger' event to siblings"
+    }
+  },
   canEmit: ["trigger:siblings"]
 }
 
@@ -19,6 +24,11 @@ export const triggerTest: IMachine = {
       }
       state.count++
       console.log(`Machine has been triggered ${state.count} times`)
+    }
+  },
+  metadata: {
+    trigger: {
+      description: "Update internal trigger count and log event"
     }
   }
 }
@@ -34,9 +44,17 @@ export const textInputMachine: IMachine = {
       emit("promptForText:builtins", { id: state.id })
     }
   },
+  metadata: {
+    _textChanged: {
+      description: "receive internal callback from DOM and progagate to siblings"
+    },
+    interact: {
+      description: "Show input field for text entry"
+    }
+  },
   canEmit: [
-    "textChanged",
-    "promptForText:builtins"
+    "promptForText:builtins",
+    "textChanged"
   ]
 }
 
@@ -45,6 +63,11 @@ export const helloWorld: IMachine = {
   listeners: {
     textChanged: (event: any) => {
       alert(`Hello ${event.detail.text}`)
+    }
+  },
+  metadata: {
+    textChanged: {
+      description: "Show updated text in alert"
     }
   }
 }
