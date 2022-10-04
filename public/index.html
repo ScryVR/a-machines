@@ -16,7 +16,7 @@
       </a-entity>
       <a-entity position="-1 1.5 -2.5">
         <a-sphere radius="0.3" color="#8e8" a-machine="machine: button" position="-1 0 0"></a-sphere>
-        <a-box color="#8e8" a-machine="machine: movingMachine"></a-box>
+        <a-box color="#8e8" animation="property: position.x; from: 0; to: 1; dur: 1000; dir: alternate; loop: 1; startEvents: startAnimation;" a-machine="machine: movingMachine"></a-box>
       </a-entity>
       <a-entity text="color: black; align: center;" scale="2 2 2" a-machine="machine: textRenderer" position="1 2.5 -2"></a-entity>
       <a-box color="orange" a-machine="machine: textInput" position="1 1.5 -2"></a-box>

@@ -80,7 +80,7 @@ export const movingMachine: IMachine = {
       // NOTE: If I want to run this in a vertex worker, this is no good. Machines should instead invoke a builtin by emitting an event.
       // This is okay just for development
       const entity: any = document.getElementById(state.id)
-      entity.object3D.position.y += 0.2
+      entity.emit("startAnimation", null, false)
     }
   },
   metadata: {
