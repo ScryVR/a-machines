@@ -93,6 +93,14 @@ export const movingMachine: IMachine = {
 export const building: IMachine = {
   name: "building",
   canEmit: ["activateTouchListener:builtins"],
+  metadata: {
+    drag: {
+      description: "Resize object"
+    },
+    twoFingerDrag: {
+      description: "Move object"
+    }
+  },
   listeners: {
     interact: (event: any, state: Record<string, any>, emit: Function) => {
       state.el = document.getElementById(state.id)

@@ -7,6 +7,11 @@ export interface IBuiltin {
 export const promptForText: IBuiltin = {
   name: "promptForText",
   listener: promptForTextListener,
+  metadata: {
+    "promptForText:builtins": {
+      description: "Show text input modal with submit button"
+    }
+  },
   canEmit: ["_textChanged"]
 }
 
@@ -28,30 +33,43 @@ function promptForTextListener(event: any) {
 
 export const activateTouchListener: IBuiltin = {
   name: "activateTouchListener",
+  metadata: {
+    "activateTouchListener:builtins": {
+      description: "Add drag handler to DOM overlay"
+    }
+  },
   listener: createDomTouchListener,
   canEmit: ["drag", "twoFingerDrag"]
 }
 
 function createDomTouchListener(event: any) {
-  console.log("Okay, creating")
   const scene: any = document.querySelector("a-scene")
   if (!scene.getAttribute("webxr")?.overlayElement) {
     console.warn("a-machine could not prompt for text - no webxr.overlayElement defined on a-scene")
     return
   }
   const touchListener = document.createElement("div")
-  touchListener.style.position = "fixed"
-  touchListener.style.top = "0"
-  touchListener.style.left = "0"
-  touchListener.style.width = "100vw"
-  touchListener.style.height = "100vh"
-  touchListener.style.backgroundColor = "rgba(0, 0, 0, 0.1)" // Temporary, for debugging purposes
+  touchListener.classList.add("a-machine-touch-listener")
+  if (customElements.get("a-machine-touch-ui")) {
+    touchListener.innerHTML = "<a-machine-touch-ui></a-machine-touch-ui>"
+  } else {
+    console.warn("To add custom UI to the touch listener, define a Web Component named <a-machine-touch-ui>")
+    touchListener.innerHTML = "<button id='done-btn'>Done</button>"
+    touchListener.querySelector("#done-btn").addEventListener("click", () => {
+      touchListener.remove()
+    })
+  }
   let prevTouch: any = null
   touchListener.addEventListener("touchstart", (event) => {
     prevTouch = event.touches[0]
   })
   touchListener.addEventListener("touchend", (event) => {
-    console.log("Should pass event along", event)
+    // @ts-ignore
+    // const cursor = document.querySelector("[cursor]").components.cursor
+    // if (cursor) {
+    //   cursor.onCursorDown.call(cursor, event)
+    //   cursor.twoWayEmit("click")
+    // }
   })
   touchListener.addEventListener("touchmove", (touchEvent) => {
     const delta = {

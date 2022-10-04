@@ -11,3 +11,21 @@
     }
   }
 }
+
+.a-machine-touch-listener {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.a-machine-touch-listener button {
+  display: inline-block;
+  padding: 0.8em 1.2em;
+  margin: 6px 0;
+}

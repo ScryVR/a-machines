@@ -65,7 +65,7 @@ function getSequence(machines: Array<IMachine>) {
 
 function recurseSequencePath(machine: IMachine | IBuiltin, event: string, allListeners: Record<string, Set<string>>, sequenceString = "") {
   // Add description for internal handling
-  let description = `${machine.name} handler for ${event}`
+  let description = `${machine.name} handler for "${event}"`
   try {
     description = machine.metadata[event].description
   } catch(_) {}
@@ -79,7 +79,7 @@ function recurseSequencePath(machine: IMachine | IBuiltin, event: string, allLis
     }
     allListeners[scopedEvent]?.forEach((listeningMachine) => {
       const machineOrBuiltin = machineRegistry[listeningMachine] || builtinRegistry[listeningMachine.split(":")[0]]
-      const duplicateLine = sequenceString.split("\n").find(str => str.startsWith(`\t${machine.name}->>${machineOrBuiltin.name}`))
+      const duplicateLine = sequenceString.split("\n").find(str => str.startsWith(`\t${machine.name}->>${machineOrBuiltin.name}: on "${scopedEvent}" event`))
       if (!duplicateLine) {
         sequenceString += `\n\t${machine.name}->>${listeningMachine.split(":")[0]}: on "${scopedEvent}" event`
         sequenceString = recurseSequencePath(machineOrBuiltin, scopedEvent, allListeners, sequenceString)
