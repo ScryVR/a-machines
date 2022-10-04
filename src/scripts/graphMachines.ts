@@ -83,8 +83,6 @@ function recurseSequencePath(machine: IMachine | IBuiltin, event: string, allLis
       if (!duplicateLine) {
         sequenceString += `\n\t${machine.name}->>${listeningMachine.split(":")[0]}: on "${scopedEvent}" event`
         sequenceString = recurseSequencePath(machineOrBuiltin, scopedEvent, allListeners, sequenceString)
-      } else {
-        console.log("Skipping adding redundant line", { machine, machineOrBuiltin, duplicateLine })
       }
     })
   })

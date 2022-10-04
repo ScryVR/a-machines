@@ -1,5 +1,9 @@
 import { IBuiltin } from "./default-builtins";
 
+export const globalState: Record<string, any> = {
+  buildMode: "edit"
+}
+
 // @ts-ignore
 AFRAME.registerComponent("a-machine", {
   schema: {
@@ -20,7 +24,7 @@ AFRAME.registerComponent("a-machine", {
       ([event, listener]) => {
         const [eventName, scope = "siblings"] = event.split(":");
         this.el.addEventListener(`aMachine:${eventName}`, (e: any) => {
-          listener(e, this.state, this.emitFactory(this.data.machine));
+          listener(e, { ...this.state, globalState }, this.emitFactory(this.data.machine));
         });
       }
     );
@@ -28,7 +32,7 @@ AFRAME.registerComponent("a-machine", {
       machineRegistry[this.data.machine].listeners.interact;
     this.el.addEventListener("click", (event: any) => {
       if (interactListener) {
-        interactListener(event, this.state, this.emitFactory(this.data.machine));
+        interactListener(event, { ...this.state, globalState }, this.emitFactory(this.data.machine));
       }
       event.stopPropagation();
     });
