@@ -89,3 +89,52 @@ export const movingMachine: IMachine = {
     }
   }
 }
+
+export const building: IMachine = {
+  name: "building",
+  canEmit: ["activateTouchListener:builtins"],
+  listeners: {
+    interact: (event: any, state: Record<string, any>, emit: Function) => {
+      state.el = document.getElementById(state.id)
+      const { face: { normal: { x, y, z } }, uv } = event.detail.intersection
+      if (y) {
+        return
+      }
+      // Update state to indicate how to respond to different drags
+      state.dragProperties = {
+        y: {
+          resizeMultiplier: uv.y < 0.5 ? -1 : 1,
+          offsetMultiplier: 1,
+          attribute: "y"
+        },
+        x: {
+          resizeMultiplier: uv.x < 0.5 ? -1 : 1,
+          offsetMultiplier: -x || z,
+          attribute: z ? "x" : "z"
+        }
+      }
+      emit("activateTouchListener:builtins", { id: state.id })
+    },
+    drag: (event: any, state: Record<string, any>) => {
+      const { x, y } = event.detail.delta
+      if (Math.abs(x) > Math.abs(y)) {
+        const { resizeMultiplier, offsetMultiplier } = state.dragProperties.x
+        state.el.object3D.scale[state.dragProperties.x.attribute] += x / 100 * resizeMultiplier
+        state.el.object3D.position[state.dragProperties.x.attribute] += x / 200 * offsetMultiplier
+      } else {
+        const { resizeMultiplier, offsetMultiplier } = state.dragProperties.y
+        state.el.object3D.scale[state.dragProperties.y.attribute] -= y / 100 * resizeMultiplier
+        state.el.object3D.position[state.dragProperties.y.attribute] -= y / 200 * offsetMultiplier
+      }
+    },
+    twoFingerDrag: (event: any, state: Record<string, any>) => {
+      const { x, y } = event.detail.delta
+      if (Math.abs(x) > Math.abs(y)) {
+        const { offsetMultiplier } = state.dragProperties.x
+        state.el.object3D.position[state.dragProperties.x.attribute] += x / 100 * offsetMultiplier
+      } else {
+        state.el.object3D.position[state.dragProperties.y.attribute] -= y / 100
+      }
+    }
+  }
+}
