@@ -1,4 +1,5 @@
 import { IMachine } from "./a-machine";
+import { deductEnergy } from "./transactionHandlers/deductEnergy";
 
 export const buttonMachine: IMachine = {
   name: "button",
@@ -103,10 +104,16 @@ export const building: IMachine = {
   },
   listeners: {
     interact: (event: any, state: Record<string, any>, emit: Function) => {
+      console.log("State", state)
       state.el = document.getElementById(state.id)
+      state.initialState = {
+        position: { ...state.el.object3D.position },
+        scale: { ...state.el.object3D.scale },
+      }
+      state.el.setAttribute("material", { transparent: true, opacity: 0.7 })
       const { face: { normal: { x, y, z } }, uv } = event.detail.intersection
       if (y) {
-        return
+        return state
       }
       // Update state to indicate how to respond to different drags
       state.dragProperties = {
@@ -143,6 +150,24 @@ export const building: IMachine = {
       } else {
         state.el.object3D.position[state.dragProperties.y.attribute] -= y / 100
       }
+    },
+    cancelBuilding: (event: any, state: Record<string, any>) => {
+      state.el.object3D.position.set(state.initialState.position.x, state.initialState.position.y, state.initialState.position.z)
+      state.el.object3D.scale.set(state.initialState.scale.x, state.initialState.scale.y, state.initialState.scale.z)
+      state.el.setAttribute("material", { transparent: true, opacity: 1 })
+    },
+    doneBuilding: (event: any, state: Record<string, any>, emit: Function, globalState: Record<string, any>) => {
+      // TODO: Handle resources according to the change in size
+      try {
+        // Handle energy costs
+        deductEnergy(10)
+        console.log("Remaining energy", globalState.user.energy)
+      } catch(err) {
+        // If insuffient resources or energy, revert building state.
+        state.el.object3D.position.set(state.initialState.position.x, state.initialState.position.y, state.initialState.position.z)
+        state.el.object3D.scale.set(state.initialState.scale.x, state.initialState.scale.y, state.initialState.scale.z)
+      }
+      state.el.setAttribute("material", { transparent: true, opacity: 1 })
     }
   }
 }

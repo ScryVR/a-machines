@@ -1,3 +1,4 @@
+import './components'
 import * as defaultMachines from "./default-machines"
 import * as defaultBuiltins from "./default-builtins"
 import { registerMachine, registerBuiltin, machineRegistry } from "./a-machine"

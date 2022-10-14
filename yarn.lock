@@ -3520,6 +3520,11 @@ lru-cache@^6.0.0:
   dependencies:
     yallist "^4.0.0"
 
+mafiu@^1.0.8:
+  version "1.0.8"
+  resolved "https://registry.yarnpkg.com/mafiu/-/mafiu-1.0.8.tgz#2082a56bc2644c360a929a612838e6815121ebaa"
+  integrity sha512-MIh/cvpFF/diyIAQONXQcCKkaKYf10moSexMZVvbrzD6ulFM7bPPlGyORmO0Ql9UCfLCsSNzBgbX5RqDzfxW9g==
+
 make-dir@^3.0.2, make-dir@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/make-dir/-/make-dir-3.1.0.tgz#415e967046b3a7f1d185277d84aa58203726a13f"

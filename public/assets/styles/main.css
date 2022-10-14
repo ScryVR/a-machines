@@ -12,6 +12,9 @@
       min-width: 300px;
       min-height: 400px; }
 
+body, html, button, input {
+  font-family: 'Fira Code', monospace; }
+
 .a-machine-touch-listener {
   position: fixed;
   top: 0;
@@ -27,4 +30,17 @@
   display: inline-block;
   padding: 0.8em 1.2em;
   margin: 6px 0; }
+
+a-machine--footer {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-bottom: 64px;
+  pointer-events: none !important; }
+
+a-machine--footer button {
+  pointer-events: auto !important;
+  cursor: pointer; }
 

@@ -1,7 +1,16 @@
 import { IBuiltin } from "./default-builtins";
 
 export const globalState: Record<string, any> = {
-  buildMode: "edit"
+  buildMode: "edit",
+  selectedAction: "interact",
+  // Todo: replace with class instance
+  user: {
+    energy: 100,
+    resources: {
+      wood: { color: "brown", quantity: 100 },
+      stone: { color: "gray", quantity: 100 }
+    }
+  }
 }
 
 // @ts-ignore
@@ -24,15 +33,15 @@ AFRAME.registerComponent("a-machine", {
       ([event, listener]) => {
         const [eventName, scope = "siblings"] = event.split(":");
         this.el.addEventListener(`aMachine:${eventName}`, (e: any) => {
-          listener(e, { ...this.state, globalState }, this.emitFactory(this.data.machine));
+          listener(e, this.state, this.emitFactory(this.data.machine), globalState);
         });
       }
     );
-    const interactListener =
-      machineRegistry[this.data.machine].listeners.interact;
     this.el.addEventListener("click", (event: any) => {
-      if (interactListener) {
-        interactListener(event, { ...this.state, globalState }, this.emitFactory(this.data.machine));
+      const listener =
+        machineRegistry[this.data.machine].listeners[globalState.selectedAction];
+      if (listener) {
+        listener(event, this.state, this.emitFactory(this.data.machine), globalState);
       }
       event.stopPropagation();
     });

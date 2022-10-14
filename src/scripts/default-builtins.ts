@@ -43,34 +43,39 @@ export const activateTouchListener: IBuiltin = {
 }
 
 function createDomTouchListener(event: any) {
+  let touchListener: HTMLElement = document.querySelector(".a-machine-touch-listener")
+  if (touchListener) {
+    touchListener.style.pointerEvents = "auto"
+    touchListener.style.visibility = "visible"
+    return
+  }
   const scene: any = document.querySelector("a-scene")
   if (!scene.getAttribute("webxr")?.overlayElement) {
     console.warn("a-machine could not prompt for text - no webxr.overlayElement defined on a-scene")
     return
   }
-  const touchListener = document.createElement("div")
+  touchListener = document.createElement("div")
   touchListener.classList.add("a-machine-touch-listener")
   if (customElements.get("a-machine-touch-ui")) {
     touchListener.innerHTML = "<a-machine-touch-ui></a-machine-touch-ui>"
   } else {
     console.warn("To add custom UI to the touch listener, define a Web Component named <a-machine-touch-ui>")
-    touchListener.innerHTML = "<button id='done-btn'>Done</button>"
+    touchListener.innerHTML = "<button id='done-btn'>Done</button><button id='cancel-btn'>Cancel</button>"
     touchListener.querySelector("#done-btn").addEventListener("click", () => {
-      touchListener.remove()
+      sendEventToTarget(event.detail.id, "doneBuilding", {})
+      touchListener.style.pointerEvents = "none"
+      touchListener.style.visibility = "hidden"
+    })
+    touchListener.querySelector("#cancel-btn").addEventListener("click", () => {
+      sendEventToTarget(event.detail.id, "cancelBuilding", {})
+      touchListener.style.pointerEvents = "none"
+      touchListener.style.visibility = "hidden"
     })
   }
   let prevTouch: any = null
   touchListener.addEventListener("touchstart", (event) => {
     prevTouch = event.touches[0]
-  })
-  touchListener.addEventListener("touchend", (event) => {
-    // @ts-ignore
-    // const cursor = document.querySelector("[cursor]").components.cursor
-    // if (cursor) {
-    //   cursor.onCursorDown.call(cursor, event)
-    //   cursor.twoWayEmit("click")
-    // }
-  })
+  }, { passive: true })
   touchListener.addEventListener("touchmove", (touchEvent) => {
     const delta = {
       x: touchEvent.touches[0].clientX - prevTouch.clientX,
@@ -83,7 +88,7 @@ function createDomTouchListener(event: any) {
       sendEventToTarget(event.detail.id, "twoFingerDrag", { delta })
     }
     prevTouch = touchEvent.touches[0]
-  })
+  }, { passive: true })
   scene.getAttribute("webxr").overlayElement.appendChild(touchListener)
 }
 
