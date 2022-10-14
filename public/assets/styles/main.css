@@ -32,13 +32,18 @@ body, html, button, input {
   margin: 6px 0; }
 
 a-machine--footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
   display: flex;
-  height: 100%;
   width: 100%;
-  flex-direction: column;
-  justify-content: flex-end;
+  justify-content: center;
   padding-bottom: 64px;
   pointer-events: none !important; }
+
+a-machine--footer scrolling-selector {
+  box-sizing: border-box;
+  padding: 0 16px; }
 
 a-machine--footer button {
   pointer-events: auto !important;

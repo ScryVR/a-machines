@@ -6,10 +6,10 @@ import { getParsedTemplate } from 'mafiu/dist/getParsedTemplate'
 
 const name = "scrolling-selector"
 
-function generateSelectOptions(options: Array<string>) {
+function generateSelectOptions(options: Array<string>, selected: string) {
   return /*html*/`
   <div class="empty-spacer"></div>
-  ${options.map(a => `<button class="${a === "use" ? "selected-action" : "not-selected"}" data-option="${a}">${a}</button>`).join("")}
+  ${options.map(a => `<button class="${a === selected ? "selected-option" : "not-selected"}" data-option="${a}">${a}</button>`).join("")}
   <div class="empty-spacer"></div>
   `
 }
@@ -29,7 +29,7 @@ const template = /*html*/`
     padding: 0;
     margin: 0;
     color: transparent;
-    transition: color 0.5s;
+    transition: color 0.3s;
   }
   .scrolling-selector.active button {
     color: rgba(0,0,0,0.5);
@@ -41,6 +41,11 @@ const template = /*html*/`
     max-height: 60px;
     overflow: auto;
     pointer-events: auto;
+    scrollbar-width: none;  /* Firefox */
+    scroll-behavior: smooth;
+  }
+  ::-webkit-scrollbar {
+    display: none;
   }
   .empty-spacer {
     min-height: 20px;
@@ -66,12 +71,12 @@ registerMafiuComponent({
         this.dispatchEvent(new CustomEvent("select", { detail: { selection: newSelection } }))
       }
     }],
-    selectedBtn: [function (newVal: HTMLButtonElement, oldVal: HTMLButtonElement) {
-      oldVal?.classList.remove("selected-option")
+    selectedBtn: [function (newVal: HTMLButtonElement) {
+      this.querySelector(".selected-option").classList.remove("selected-option")
       newVal?.classList.add("selected-option")
     }],
-    options: [function (options: string) {
-      this.querySelector(".scrolling-selector").innerHTML = getParsedTemplate(generateSelectOptions(options.split(",")))
+    options: [function (options: string, oldOptions: string) {
+      this.querySelector(".scrolling-selector").innerHTML = getParsedTemplate(generateSelectOptions(options.split(","), options.split(",")[0]))
       this.state.selectedBtn = this.querySelector("button")
     }]
   },
@@ -88,6 +93,7 @@ registerMafiuComponent({
       clearTimeout(this.state.setInactiveTimeout)
       this.state.setInactiveTimeout = setTimeout(() => {
         event.target.classList.remove("active")
+        event.target.scrollTop = Math.round(event.target.scrollTop / 20) * 20
       }, 300)
     }
   }

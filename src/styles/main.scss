@@ -35,13 +35,19 @@ body, html, button, input {
 }
 
 a-machine--footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
   display: flex;
-  height: 100%;
   width: 100%;
-  flex-direction: column;
-  justify-content: flex-end;
+  justify-content: center;
   padding-bottom: 64px;
   pointer-events: none !important;
+}
+
+a-machine--footer scrolling-selector {
+  box-sizing: border-box;
+  padding: 0 16px;
 }
 
 a-machine--footer button {
