@@ -10,6 +10,23 @@ const ARGS_BY_ACTION = {
 }
 let template = /*html*/`
 <style>
+  scrolling-selector.has-swiping-indicator::before {
+    content: "";
+    height: 30px;
+    width: 30px;
+    position: absolute;
+    top: 0;
+    left: 60px;
+    background: rgba(0,255,255,0.3);
+    border-radius: 100%;
+    opacity: 0;
+    animation: swipe 800ms infinite ease-out;
+    animation-delay: 3s;
+  }
+  @keyframes swipe {
+    from, to { top: 50px; opacity: 1; }
+    90% { top: 20px; opacity: 1; }
+  }
   scrolling-selector {
     transition: max-width 0.8s, padding 0.2s;
     transition-delay: 0.5s;
@@ -22,6 +39,8 @@ let template = /*html*/`
   }
 </style>
 <scrolling-selector
+  class="has-swiping-indicator"
+  style="position: relative;"
   options="${ACTIONS.join(",")}"
   mhandle="onSelectAction:select">
 </scrolling-selector>
@@ -41,9 +60,9 @@ registerMafiuComponent({
   },
   hooks: {
     selectedAction: [(action: string) => {
-      globalState.selectedAction = action
+      globalState.selectedAction = action.replace(/\s/g, "_") // TODO: find a better way of converting between nice human names and action names
     }],
-    hasArg: [function (newVal: boolean, oldVal: boolean) {
+    hasArg: [function (newVal: boolean) {
       if (newVal) {
         // @ts-ignore
         const args = ARGS_BY_ACTION[this.state.selectedAction]
@@ -58,8 +77,10 @@ registerMafiuComponent({
     onSelectAction(event: any) {
       this.state.selectedAction = event.detail.selection
       this.state.hasArg = ACTIONS_WITH_ARGS.includes(event.detail.selection)
+      this.querySelector(".has-swiping-indicator")?.classList.remove("has-swiping-indicator")
     },
     onSelectArg(event: any) {
+      globalState.actionArg = event.detail.selection
     }
   }
 })

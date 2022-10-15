@@ -14,13 +14,15 @@ function generateSelectOptions(options: Array<string>, selected: string) {
   `
 }
 
+const scrollIndicator = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' version='1.1' viewBox='260 320 500 500'%3E%3Cg%3E%3Cpath d='m261.44 326.65 112.86 112.86 112.86-112.86-14.113-14.113-98.742 98.742-98.742-98.742z'/%3E%3C/g%3E%3C/svg%3E"
+
 const template = /*html*/`
 <style>
   .scrolling-selector .selected-option {
-    color: cyan !important;
+    color: #0dd !important;
   }
   .scrolling-selector button {
-    height: 20px;
+    height: 40px;
     font-size: 16px;
     flex-shrink: 0;
     background: none;
@@ -38,7 +40,7 @@ const template = /*html*/`
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
-    max-height: 60px;
+    max-height: 120px;
     overflow: auto;
     pointer-events: auto;
     scrollbar-width: none;  /* Firefox */
@@ -48,7 +50,7 @@ const template = /*html*/`
     display: none;
   }
   .empty-spacer {
-    min-height: 20px;
+    min-height: 40px;
     width: 100%;
   }
 </style>
@@ -77,14 +79,16 @@ registerMafiuComponent({
     }],
     options: [function (options: string, oldOptions: string) {
       this.querySelector(".scrolling-selector").innerHTML = getParsedTemplate(generateSelectOptions(options.split(","), options.split(",")[0]))
+      this.querySelector(".scrolling-selector").scrollTop = 0
       this.state.selectedBtn = this.querySelector("button")
+      this.state.selectedOption = options.split(",")[0]
     }]
   },
   handlers: {
     onScroll(event: any) {
       // Update selected action
       const buttons: Array<HTMLButtonElement> = Array.from(event.target.querySelectorAll("button"))
-      const buttonIndex = Math.round(event.target.scrollTop / 20)
+      const buttonIndex = Math.round(event.target.scrollTop / 40)
       this.state.selectedBtn = buttons[buttonIndex]
       this.state.selectedOption = this.state.selectedBtn.getAttribute("data-option")
 
@@ -93,7 +97,7 @@ registerMafiuComponent({
       clearTimeout(this.state.setInactiveTimeout)
       this.state.setInactiveTimeout = setTimeout(() => {
         event.target.classList.remove("active")
-        event.target.scrollTop = Math.round(event.target.scrollTop / 20) * 20
+        event.target.scrollTop = Math.round(event.target.scrollTop / 40) * 40
       }, 300)
     }
   }

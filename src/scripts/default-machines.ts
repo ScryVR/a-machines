@@ -25,7 +25,8 @@ export const triggerTest: IMachine = {
       }
       state.count++
       console.log(`Machine has been triggered ${state.count} times`)
-    }
+    },
+    set_material: setMaterial,
   },
   metadata: {
     trigger: {
@@ -43,7 +44,8 @@ export const textInputMachine: IMachine = {
     },
     interact: (event: any, state: Record<string, any>, emit: Function) => {
       emit("promptForText:builtins", { id: state.id })
-    }
+    },
+    set_material: setMaterial,
   },
   metadata: {
     _textChanged: {
@@ -82,7 +84,8 @@ export const movingMachine: IMachine = {
       // This is okay just for development
       const entity: any = document.getElementById(state.id)
       entity.emit("startAnimation", null, false)
-    }
+    },
+    set_material: setMaterial,
   },
   metadata: {
     trigger: {
@@ -112,9 +115,7 @@ export const building: IMachine = {
       }
       state.el.setAttribute("material", { transparent: true, opacity: 0.7 })
       const { face: { normal: { x, y, z } }, uv } = event.detail.intersection
-      if (y) {
-        return state
-      }
+
       // Update state to indicate how to respond to different drags
       state.dragProperties = {
         y: {
@@ -125,11 +126,12 @@ export const building: IMachine = {
         x: {
           resizeMultiplier: uv.x < 0.5 ? -1 : 1,
           offsetMultiplier: -x || z,
-          attribute: z ? "x" : "z"
+          attribute: Math.abs(z) > Math.abs(x) ? "x" : "z"
         }
       }
       emit("activateTouchListener:builtins", { id: state.id })
     },
+    set_material: setMaterial,
     drag: (event: any, state: Record<string, any>) => {
       const { x, y } = event.detail.delta
       if (Math.abs(x) > Math.abs(y)) {
@@ -169,5 +171,33 @@ export const building: IMachine = {
       }
       state.el.setAttribute("material", { transparent: true, opacity: 1 })
     }
+  }
+}
+
+export const foundation: IMachine = {
+  name: "foundation",
+  listeners: {
+    build: (event: any, state: Record<string, any>, emit: Function, globalState: Record<string, any>) => {
+      if (["box", "sphere", "cylinder"].includes(globalState.actionArg)) {
+        console.log("Should build a", globalState.actionArg)
+        const { detail: { intersection } } = event
+        const newEl: any = document.createElement(`a-${globalState.actionArg}`)
+        newEl.object3D.position.set(intersection.point.x, intersection.point.y + 0.5, intersection.point.z)
+        newEl.setAttribute("a-machine", { machine: "building" })
+        const foundation = document.getElementById(state.id)
+        foundation.parentElement.appendChild(newEl)
+      } 
+    }
+  },
+  metadata: {
+    build: {
+      description: "Create a new structure."
+    }
+  }
+}
+
+function setMaterial (event: any, state: Record<string, any>, emit: Function, globalState: Record<string, any>) {
+  if (globalState.actionArg) {
+    document.getElementById(state.id).setAttribute("color", globalState.actionArg)
   }
 }
