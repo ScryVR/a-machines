@@ -9,15 +9,39 @@ const name = "scrolling-selector"
 function generateSelectOptions(options: Array<string>, selected: string) {
   return /*html*/`
   <div class="empty-spacer"></div>
-  ${options.map(a => `<button class="${a === selected ? "selected-option" : "not-selected"}" data-option="${a}">${a}</button>`).join("")}
+  ${options.map(a => `<button class="${a === selected ? "selected-option" : "not-selected"} noselect" data-option="${a}">${a}</button>`).join("")}
   <div class="empty-spacer"></div>
   `
 }
 
-const scrollIndicator = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' version='1.1' viewBox='260 320 500 500'%3E%3Cg%3E%3Cpath d='m261.44 326.65 112.86 112.86 112.86-112.86-14.113-14.113-98.742 98.742-98.742-98.742z'/%3E%3C/g%3E%3C/svg%3E"
-
 const template = /*html*/`
 <style>
+  .scroll-up-indicator {
+    content: "";
+    position: absolute;
+    top: 30px;
+    left: calc(50% - 5px);
+    border: 2px solid transparent;
+    border-left-color: cyan;
+    border-bottom-color: cyan;
+    width: 10px;
+    height: 10px;
+    box-sizing: border-box;
+    transform: rotate(135deg);
+  }
+  .scroll-down-indicator {
+    content: "";
+    position: absolute;
+    bottom: 30px;
+    left: calc(50% - 5px);
+    border: 2px solid transparent;
+    border-left-color: cyan;
+    border-bottom-color: cyan;
+    width: 10px;
+    height: 10px;
+    box-sizing: border-box;
+    transform: rotate(-45deg);
+  }
   .scrolling-selector .selected-option {
     color: #0dd !important;
   }
@@ -45,6 +69,7 @@ const template = /*html*/`
     pointer-events: auto;
     scrollbar-width: none;  /* Firefox */
     scroll-behavior: smooth;
+    position: relative;
   }
   ::-webkit-scrollbar {
     display: none;
@@ -54,10 +79,14 @@ const template = /*html*/`
     width: 100%;
   }
 </style>
-<div
-  class="scrolling-selector"
-  mhandle="onScroll:scroll"
->
+<div style="position: relative;">
+  <div class="{{scrollUpIndicatorClass}}"></div>
+    <div
+      class="scrolling-selector"
+      mhandle="onScroll:scroll"
+    >
+    </div>
+  <div class="{{scrollDownIndicatorClass}}"></div>
 </div>
 `
 
@@ -65,7 +94,9 @@ registerMafiuComponent({
   name,
   template,
   data: {
-    options: ""
+    options: "",
+    scrollUpIndicatorClass: "",
+    scrollDownIndicatorClass: "",
   },
   hooks: {
     selectedOption: [function(newSelection: string, oldSelection: string) {
@@ -78,14 +109,23 @@ registerMafiuComponent({
       newVal?.classList.add("selected-option")
     }],
     options: [function (options: string, oldOptions: string) {
-      this.querySelector(".scrolling-selector").innerHTML = getParsedTemplate(generateSelectOptions(options.split(","), options.split(",")[0]))
+      const optionsList = options.split(",")
+      this.querySelector(".scrolling-selector").innerHTML = getParsedTemplate(generateSelectOptions(optionsList, optionsList[0]))
       this.querySelector(".scrolling-selector").scrollTop = 0
       this.state.selectedBtn = this.querySelector("button")
-      this.state.selectedOption = options.split(",")[0]
+      this.state.selectedOption = optionsList
+      if (optionsList.length > 1) {
+        this.state.scrollDownIndicatorClass = "scroll-down-indicator"
+      }
+      this.state.scrollUpIndicatorClass = ""
     }]
   },
   handlers: {
     onScroll(event: any) {
+      // Hide scroll indicators to reduce visual noise
+      this.state.scrollDownIndicatorClass = ""
+      this.state.scrollUpIndicatorClass = ""
+
       // Update selected action
       const buttons: Array<HTMLButtonElement> = Array.from(event.target.querySelectorAll("button"))
       const buttonIndex = Math.round(event.target.scrollTop / 40)
@@ -98,6 +138,17 @@ registerMafiuComponent({
       this.state.setInactiveTimeout = setTimeout(() => {
         event.target.classList.remove("active")
         event.target.scrollTop = Math.round(event.target.scrollTop / 40) * 40
+        // Set scroll indicators
+        if (buttonIndex > 0) {
+          this.state.scrollUpIndicatorClass = "scroll-up-indicator"
+        } else {
+          this.state.scrollUpIndicatorClass = ""
+        }
+        if (buttonIndex < buttons.length - 1) {
+          this.state.scrollDownIndicatorClass = "scroll-down-indicator"
+        } else {
+          this.state.scrollDownIndicatorClass = ""
+        }
       }, 300)
     }
   }

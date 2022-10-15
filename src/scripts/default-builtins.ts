@@ -42,7 +42,9 @@ export const activateTouchListener: IBuiltin = {
   canEmit: ["drag", "twoFingerDrag"]
 }
 
+let dragTargetId: string = ""
 function createDomTouchListener(event: any) {
+  dragTargetId = event.detail.id
   let touchListener: HTMLElement = document.querySelector(".a-machine-touch-listener")
   if (touchListener) {
     touchListener.style.pointerEvents = "auto"
@@ -62,12 +64,12 @@ function createDomTouchListener(event: any) {
     console.warn("To add custom UI to the touch listener, define a Web Component named <a-machine-touch-ui>")
     touchListener.innerHTML = "<button id='done-btn'>Done</button><button id='cancel-btn'>Cancel</button>"
     touchListener.querySelector("#done-btn").addEventListener("click", () => {
-      sendEventToTarget(event.detail.id, "doneBuilding", {})
+      sendEventToTarget(dragTargetId, "doneBuilding", {})
       touchListener.style.pointerEvents = "none"
       touchListener.style.visibility = "hidden"
     })
     touchListener.querySelector("#cancel-btn").addEventListener("click", () => {
-      sendEventToTarget(event.detail.id, "cancelBuilding", {})
+      sendEventToTarget(dragTargetId, "cancelBuilding", {})
       touchListener.style.pointerEvents = "none"
       touchListener.style.visibility = "hidden"
     })
@@ -82,10 +84,10 @@ function createDomTouchListener(event: any) {
       y: touchEvent.touches[0].clientY - prevTouch.clientY,
     }
     if (touchEvent.touches.length === 1) {
-      sendEventToTarget(event.detail.id, "drag", { delta })
+      sendEventToTarget(dragTargetId, "drag", { delta })
     }
     if (touchEvent.touches.length === 2) {
-      sendEventToTarget(event.detail.id, "twoFingerDrag", { delta })
+      sendEventToTarget(dragTargetId, "twoFingerDrag", { delta })
     }
     prevTouch = touchEvent.touches[0]
   }, { passive: true })

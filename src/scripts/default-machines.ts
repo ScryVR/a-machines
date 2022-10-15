@@ -153,6 +153,7 @@ export const building: IMachine = {
         state.el.object3D.position[state.dragProperties.y.attribute] -= y / 100
       }
     },
+    build: createNewBuilding,
     cancelBuilding: (event: any, state: Record<string, any>) => {
       state.el.object3D.position.set(state.initialState.position.x, state.initialState.position.y, state.initialState.position.z)
       state.el.object3D.scale.set(state.initialState.scale.x, state.initialState.scale.y, state.initialState.scale.z)
@@ -177,17 +178,7 @@ export const building: IMachine = {
 export const foundation: IMachine = {
   name: "foundation",
   listeners: {
-    build: (event: any, state: Record<string, any>, emit: Function, globalState: Record<string, any>) => {
-      if (["box", "sphere", "cylinder"].includes(globalState.actionArg)) {
-        console.log("Should build a", globalState.actionArg)
-        const { detail: { intersection } } = event
-        const newEl: any = document.createElement(`a-${globalState.actionArg}`)
-        newEl.object3D.position.set(intersection.point.x, intersection.point.y + 0.5, intersection.point.z)
-        newEl.setAttribute("a-machine", { machine: "building" })
-        const foundation = document.getElementById(state.id)
-        foundation.parentElement.appendChild(newEl)
-      } 
-    }
+    build: createNewBuilding
   },
   metadata: {
     build: {
@@ -200,4 +191,16 @@ function setMaterial (event: any, state: Record<string, any>, emit: Function, gl
   if (globalState.actionArg) {
     document.getElementById(state.id).setAttribute("color", globalState.actionArg)
   }
+}
+
+function createNewBuilding (event: any, state: Record<string, any>, emit: Function, globalState: Record<string, any>) {
+  if (["box", "sphere", "cylinder"].includes(globalState.actionArg)) {
+    console.log("Should build a", globalState.actionArg)
+    const { detail: { intersection } } = event
+    const newEl: any = document.createElement(`a-${globalState.actionArg}`)
+    newEl.object3D.position.set(intersection.point.x, intersection.point.y + 0.5, intersection.point.z)
+    newEl.setAttribute("a-machine", { machine: "building" })
+    const foundation = document.getElementById(state.id)
+    foundation.parentElement.appendChild(newEl)
+  } 
 }
