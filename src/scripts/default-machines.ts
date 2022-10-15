@@ -195,11 +195,11 @@ function setMaterial (event: any, state: Record<string, any>, emit: Function, gl
 
 function createNewBuilding (event: any, state: Record<string, any>, emit: Function, globalState: Record<string, any>) {
   if (["box", "sphere", "cylinder"].includes(globalState.actionArg)) {
-    console.log("Should build a", globalState.actionArg)
-    const { detail: { intersection } } = event
+    const { detail: { intersection: { point, face: { normal } } } } = event
     const newEl: any = document.createElement(`a-${globalState.actionArg}`)
-    newEl.object3D.position.set(intersection.point.x, intersection.point.y + 0.5, intersection.point.z)
+    newEl.object3D.position.set(point.x + normal.x * 0.5, point.y + normal.y * 0.5, point.z + normal.z * 0.5)
     newEl.setAttribute("a-machine", { machine: "building" })
+    newEl.setAttribute("material", event.target.getAttribute("material"))
     const foundation = document.getElementById(state.id)
     foundation.parentElement.appendChild(newEl)
   } 

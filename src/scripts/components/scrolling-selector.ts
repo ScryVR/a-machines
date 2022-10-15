@@ -80,7 +80,7 @@ registerMafiuComponent({
       this.querySelector(".selected-option").classList.remove("selected-option")
       newVal?.classList.add("selected-option")
     }],
-    options: [function (options: string, oldOptions: string) {
+    options: [function (options: string) {
       const optionsList = options.split(",")
       this.querySelector(".scrolling-selector").innerHTML = getParsedTemplate(generateSelectOptions(optionsList, optionsList[0]))
       this.querySelector(".scrolling-selector").scrollTop = 0
