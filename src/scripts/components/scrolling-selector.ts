@@ -1,20 +1,26 @@
 // @ts-ignore
-import { registerMafiuComponent } from 'mafiu/dist/generator'
+import { registerMafiuComponent } from "mafiu/dist/generator";
 // @ts-ignore
-import { getParsedTemplate } from 'mafiu/dist/getParsedTemplate'
+import { getParsedTemplate } from "mafiu/dist/getParsedTemplate";
 
-
-const name = "scrolling-selector"
+const name = "scrolling-selector";
 
 function generateSelectOptions(options: Array<string>, selected: string) {
-  return /*html*/`
+  return /*html*/ `
   <div class="empty-spacer"></div>
-  ${options.map(a => `<button class="${a === selected ? "selected-option" : "not-selected"} noselect" data-option="${a}">${a}</button>`).join("")}
+  ${options
+    .map(
+      (a) =>
+        `<button class="${
+          a === selected ? "selected-option" : "not-selected"
+        } noselect" data-option="${a}">${a}</button>`
+    )
+    .join("")}
   <div class="empty-spacer"></div>
-  `
+  `;
 }
 
-const template = /*html*/`
+const template = /*html*/ `
 <style>
   .scrolling-selector .selected-option {
     color: #0dd !important;
@@ -62,47 +68,62 @@ const template = /*html*/`
     </div>
   <div class="{{scrollDownIndicatorClass}}"></div>
 </div>
-`
+`;
 
 registerMafiuComponent({
   name,
   template,
   data: {
-    options: ""
+    options: "",
   },
   hooks: {
-    selectedOption: [function(newSelection: string, oldSelection: string) {
-      if (newSelection !== oldSelection) {
-        this.dispatchEvent(new CustomEvent("select", { detail: { selection: newSelection } }))
-      }
-    }],
-    selectedBtn: [function (newVal: HTMLButtonElement) {
-      this.querySelector(".selected-option").classList.remove("selected-option")
-      newVal?.classList.add("selected-option")
-    }],
-    options: [function (options: string) {
-      const optionsList = options.split(",")
-      this.querySelector(".scrolling-selector").innerHTML = getParsedTemplate(generateSelectOptions(optionsList, optionsList[0]))
-      this.querySelector(".scrolling-selector").scrollTop = 0
-      this.state.selectedBtn = this.querySelector("button")
-      this.state.selectedOption = optionsList[0]
-    }]
+    selectedOption: [
+      function (newSelection: string, oldSelection: string) {
+        if (newSelection !== oldSelection) {
+          this.dispatchEvent(
+            new CustomEvent("select", { detail: { selection: newSelection } })
+          );
+        }
+      },
+    ],
+    selectedBtn: [
+      function (newVal: HTMLButtonElement) {
+        this.querySelector(".selected-option").classList.remove(
+          "selected-option"
+        );
+        newVal?.classList.add("selected-option");
+      },
+    ],
+    options: [
+      function (options: string) {
+        const optionsList = options.split(",");
+        this.querySelector(".scrolling-selector").innerHTML = getParsedTemplate(
+          generateSelectOptions(optionsList, optionsList[0])
+        );
+        this.querySelector(".scrolling-selector").scrollTop = 0;
+        this.state.selectedBtn = this.querySelector("button");
+        this.state.selectedOption = optionsList[0];
+      },
+    ],
   },
   handlers: {
     onScroll(event: any) {
       // Update selected action
-      const buttons: Array<HTMLButtonElement> = Array.from(event.target.querySelectorAll("button"))
-      const buttonIndex = Math.round(event.target.scrollTop / 40)
-      this.state.selectedBtn = buttons[buttonIndex]
-      this.state.selectedOption = this.state.selectedBtn.getAttribute("data-option")
+      const buttons: Array<HTMLButtonElement> = Array.from(
+        event.target.querySelectorAll("button")
+      );
+      const buttonIndex = Math.round(event.target.scrollTop / 40);
+      this.state.selectedBtn = buttons[buttonIndex];
+      this.state.selectedOption =
+        this.state.selectedBtn.getAttribute("data-option");
 
       // UI stuff
-      event.target.classList.add("active")
-      clearTimeout(this.state.setInactiveTimeout)
+      event.target.classList.add("active");
+      clearTimeout(this.state.setInactiveTimeout);
       this.state.setInactiveTimeout = setTimeout(() => {
-        event.target.classList.remove("active")
-        event.target.scrollTop = Math.round(event.target.scrollTop / 40) * 40
-      }, 300)
-    }
-  }
-})
+        event.target.classList.remove("active");
+        event.target.scrollTop = Math.round(event.target.scrollTop / 40) * 40;
+      }, 300);
+    },
+  },
+});
