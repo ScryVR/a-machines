@@ -16,32 +16,6 @@ function generateSelectOptions(options: Array<string>, selected: string) {
 
 const template = /*html*/`
 <style>
-  .scroll-up-indicator {
-    content: "";
-    position: absolute;
-    top: 30px;
-    left: calc(50% - 5px);
-    border: 2px solid transparent;
-    border-left-color: cyan;
-    border-bottom-color: cyan;
-    width: 10px;
-    height: 10px;
-    box-sizing: border-box;
-    transform: rotate(135deg);
-  }
-  .scroll-down-indicator {
-    content: "";
-    position: absolute;
-    bottom: 30px;
-    left: calc(50% - 5px);
-    border: 2px solid transparent;
-    border-left-color: cyan;
-    border-bottom-color: cyan;
-    width: 10px;
-    height: 10px;
-    box-sizing: border-box;
-    transform: rotate(-45deg);
-  }
   .scrolling-selector .selected-option {
     color: #0dd !important;
   }
@@ -94,9 +68,7 @@ registerMafiuComponent({
   name,
   template,
   data: {
-    options: "",
-    scrollUpIndicatorClass: "",
-    scrollDownIndicatorClass: "",
+    options: ""
   },
   hooks: {
     selectedOption: [function(newSelection: string, oldSelection: string) {
@@ -113,19 +85,11 @@ registerMafiuComponent({
       this.querySelector(".scrolling-selector").innerHTML = getParsedTemplate(generateSelectOptions(optionsList, optionsList[0]))
       this.querySelector(".scrolling-selector").scrollTop = 0
       this.state.selectedBtn = this.querySelector("button")
-      this.state.selectedOption = optionsList
-      if (optionsList.length > 1) {
-        this.state.scrollDownIndicatorClass = "scroll-down-indicator"
-      }
-      this.state.scrollUpIndicatorClass = ""
+      this.state.selectedOption = optionsList[0]
     }]
   },
   handlers: {
     onScroll(event: any) {
-      // Hide scroll indicators to reduce visual noise
-      this.state.scrollDownIndicatorClass = ""
-      this.state.scrollUpIndicatorClass = ""
-
       // Update selected action
       const buttons: Array<HTMLButtonElement> = Array.from(event.target.querySelectorAll("button"))
       const buttonIndex = Math.round(event.target.scrollTop / 40)
@@ -138,17 +102,6 @@ registerMafiuComponent({
       this.state.setInactiveTimeout = setTimeout(() => {
         event.target.classList.remove("active")
         event.target.scrollTop = Math.round(event.target.scrollTop / 40) * 40
-        // Set scroll indicators
-        if (buttonIndex > 0) {
-          this.state.scrollUpIndicatorClass = "scroll-up-indicator"
-        } else {
-          this.state.scrollUpIndicatorClass = ""
-        }
-        if (buttonIndex < buttons.length - 1) {
-          this.state.scrollDownIndicatorClass = "scroll-down-indicator"
-        } else {
-          this.state.scrollDownIndicatorClass = ""
-        }
       }, 300)
     }
   }
