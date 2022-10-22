@@ -117,5 +117,8 @@ export function registerBuiltin(event: string, builtin: IBuiltin) {
 }
 
 function id() {
-  return "machine-" + crypto.randomUUID();
+  // There's some kind of weird typing issue where this function is not recognized by TS
+  // This is a dumb way around that.
+  const c: any = crypto
+  return "machine-" + c.randomUUID();
 }

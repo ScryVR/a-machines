@@ -1,7 +1,7 @@
 {
   "name": "aframe-machines",
-  "version": "1.0.0",
-  "main": "index.js",
+  "version": "0.0.1",
+  "main": "dist/main.js",
   "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.19.1",
@@ -29,7 +29,8 @@
     "dev:start": "live-server --open=./public/ --host=localhost --watch=./public/",
     "dev": "npm-run-all -p dev:*",
     "build": "cross-env NODE_ENV=production webpack",
-    "deploy": "yarn build; aws --profile personal --recursive s3 cp --acl=public-read public s3://bernardo.lol/a-machine"
+    "deploy": "yarn build; aws --profile personal --recursive s3 cp --acl=public-read public s3://bernardo.lol/a-machine",
+    "prepublishOnly": "tsc --outDir dist; rm dist/*.config.js; mv dist/src/scripts/* dist; rm -rf dist/src;"
   },
   "dependencies": {
     "mafiu": "^1.0.8"
