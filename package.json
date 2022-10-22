@@ -30,7 +30,7 @@
     "dev": "npm-run-all -p dev:*",
     "build": "cross-env NODE_ENV=production webpack",
     "deploy": "yarn build; aws --profile personal --recursive s3 cp --acl=public-read public s3://bernardo.lol/a-machine",
-    "prepublishOnly": "tsc --outDir dist; rm dist/*.config.js; mv dist/src/scripts/* dist; rm -rf dist/src;"
+    "prepublishOnly": "rm -rf dist; tsc --outDir dist; rm dist/*.config.js; mv dist/src/scripts/* dist; rm -rf dist/src;"
   },
   "dependencies": {
     "mafiu": "^1.0.8"

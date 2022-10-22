@@ -245,14 +245,16 @@ function createNewBuilding(
       },
     } = event;
     const newEl: any = document.createElement(`a-${globalState.actionArg}`);
+    const foundation: any = document.getElementById(state.id);
+    const isFoundation = foundation.getAttribute("a-machine")?.machine === "foundation"
+    const appendTarget = (isFoundation && globalState.foundationAppendTarget) || foundation.parentElement
     newEl.object3D.position.set(
-      point.x + normal.x * 0.5,
-      point.y + normal.y * 0.5,
-      point.z + normal.z * 0.5
+      point.x,
+      point.y - appendTarget.object3D.position.y + 1,
+      point.z
     );
     newEl.setAttribute("a-machine", { machine: "building" });
-    newEl.setAttribute("material", event.target.getAttribute("material"));
-    const foundation = document.getElementById(state.id);
-    foundation.parentElement.appendChild(newEl);
+    newEl.setAttribute("material", { color: "cyan" });
+    appendTarget.appendChild(newEl);
   }
 }

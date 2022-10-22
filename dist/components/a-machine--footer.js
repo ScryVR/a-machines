@@ -84,9 +84,11 @@ registerMafiuComponent({
             this.state.selectedAction = event.detail.selection;
             this.state.hasArg = ACTIONS_WITH_ARGS.includes(event.detail.selection);
             (_a = this.querySelector(".has-swiping-indicator")) === null || _a === void 0 ? void 0 : _a.classList.remove("has-swiping-indicator");
+            this.dispatchEvent(new CustomEvent("selection", { detail: { action: event.detail.selection } }));
         },
         onSelectArg(event) {
             globalState.actionArg = event.detail.selection;
+            this.dispatchEvent(new CustomEvent("selection", { detail: { arg: event.detail.selection } }));
         },
     },
 });

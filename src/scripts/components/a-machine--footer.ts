@@ -87,9 +87,11 @@ registerMafiuComponent({
       this.querySelector(".has-swiping-indicator")?.classList.remove(
         "has-swiping-indicator"
       );
+      this.dispatchEvent(new CustomEvent("selection", { detail: { action: event.detail.selection } }))
     },
     onSelectArg(event: any) {
       globalState.actionArg = event.detail.selection;
+      this.dispatchEvent(new CustomEvent("selection", { detail: { arg: event.detail.selection } }))
     },
   },
 });

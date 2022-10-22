@@ -190,13 +190,16 @@ function setMaterial(event, state, emit, globalState) {
     }
 }
 function createNewBuilding(event, state, emit, globalState) {
+    var _a;
     if (["box", "sphere", "cylinder"].includes(globalState.actionArg)) {
         const { detail: { intersection: { point, face: { normal }, }, }, } = event;
         const newEl = document.createElement(`a-${globalState.actionArg}`);
-        newEl.object3D.position.set(point.x + normal.x * 0.5, point.y + normal.y * 0.5, point.z + normal.z * 0.5);
-        newEl.setAttribute("a-machine", { machine: "building" });
-        newEl.setAttribute("material", event.target.getAttribute("material"));
         const foundation = document.getElementById(state.id);
-        foundation.parentElement.appendChild(newEl);
+        const isFoundation = ((_a = foundation.getAttribute("a-machine")) === null || _a === void 0 ? void 0 : _a.machine) === "foundation";
+        const appendTarget = (isFoundation && globalState.foundationAppendTarget) || foundation.parentElement;
+        newEl.object3D.position.set(point.x, point.y - appendTarget.object3D.position.y + 1, point.z);
+        newEl.setAttribute("a-machine", { machine: "building" });
+        newEl.setAttribute("material", { color: "cyan" });
+        appendTarget.appendChild(newEl);
     }
 }
