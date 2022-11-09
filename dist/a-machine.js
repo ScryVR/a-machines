@@ -5,8 +5,8 @@ export const globalState = {
     user: {
         energy: 100,
         resources: {
-            wood: { color: "brown", quantity: 100 },
-            stone: { color: "gray", quantity: 100 }
+            wood: { material: { color: "brown" }, quantity: 100 },
+            stone: { material: { color: "gray" }, quantity: 100 }
         }
     }
 };

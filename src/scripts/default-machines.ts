@@ -1,5 +1,8 @@
 import { IMachine } from "./a-machine";
-import { deductEnergy } from "./transactionHandlers/deductEnergy";
+import {
+  deductEnergy,
+  deductResources,
+} from "./transactionHandlers/deductEnergy";
 
 export const buttonMachine: IMachine = {
   name: "button",
@@ -94,7 +97,11 @@ export const movingMachine: IMachine = {
 
 export const building: IMachine = {
   name: "building",
-  canEmit: ["activateTouchListener:builtins"],
+  canEmit: [
+    "activateTouchListener:builtins",
+    "createdBuilding:builtins",
+    "modifiedBuilding:builtins",
+  ],
   metadata: {
     drag: {
       description: "Resize object",
@@ -135,7 +142,7 @@ export const building: IMachine = {
       emit("activateTouchListener:builtins", { id: state.id });
     },
     set_material: setMaterial,
-    drag: (event: any, state: Record<string, any>) => {
+    drag: (event: any, state: Record<string, any>, emit: Function) => {
       const { x, y } = event.detail.delta;
       if (Math.abs(x) > Math.abs(y)) {
         const { resizeMultiplier, offsetMultiplier } = state.dragProperties.x;
@@ -150,8 +157,9 @@ export const building: IMachine = {
         state.el.object3D.position[state.dragProperties.y.attribute] -=
           (y / 200) * offsetMultiplier;
       }
+      emit("modifiedBuilding:builtins", { el: state.el });
     },
-    twoFingerDrag: (event: any, state: Record<string, any>) => {
+    twoFingerDrag: (event: any, state: Record<string, any>, emit: Function) => {
       const { x, y } = event.detail.delta;
       if (Math.abs(x) > Math.abs(y)) {
         const { offsetMultiplier } = state.dragProperties.x;
@@ -160,9 +168,14 @@ export const building: IMachine = {
       } else {
         state.el.object3D.position[state.dragProperties.y.attribute] -= y / 100;
       }
+      emit("modifiedBuilding:builtins", { el: state.el });
     },
     build: createNewBuilding,
-    cancelBuilding: (event: any, state: Record<string, any>) => {
+    cancelBuilding: (
+      event: any,
+      state: Record<string, any>,
+      emit: Function
+    ) => {
       state.el.object3D.position.set(
         state.initialState.position.x,
         state.initialState.position.y,
@@ -174,6 +187,7 @@ export const building: IMachine = {
         state.initialState.scale.z
       );
       state.el.setAttribute("material", { transparent: true, opacity: 1 });
+      emit("modifiedBuilding:builtins", { el: state.el });
     },
     doneBuilding: (
       event: any,
@@ -185,7 +199,6 @@ export const building: IMachine = {
       try {
         // Handle energy costs
         deductEnergy(10);
-        console.log("Remaining energy", globalState.user.energy);
       } catch (err) {
         // If insuffient resources or energy, revert building state.
         state.el.object3D.position.set(
@@ -200,6 +213,7 @@ export const building: IMachine = {
         );
       }
       state.el.setAttribute("material", { transparent: true, opacity: 1 });
+      emit("modifiedBuilding:builtins", { el: state.el });
     },
   },
 };
@@ -209,6 +223,7 @@ export const foundation: IMachine = {
   listeners: {
     build: createNewBuilding,
   },
+  canEmit: ["createdBuilding:builtins"],
   metadata: {
     build: {
       description: "Create a new structure.",
@@ -223,9 +238,20 @@ function setMaterial(
   globalState: Record<string, any>
 ) {
   if (globalState.actionArg) {
+    const resource = globalState.actionArg;
+    const el = document.getElementById(state.id) as any;
+    deductResources(
+      resource,
+      el.object3D.scale.x * el.object3D.scale.y * el.object3D.scale.z
+    );
+    deductEnergy(-1);
     document
       .getElementById(state.id)
-      .setAttribute("color", globalState.actionArg);
+      .setAttribute(
+        "material",
+        globalState.user.resources[globalState.actionArg].material
+      );
+    emit(`modifiedBuilding:builtins`, { el });
   }
 }
 
@@ -246,15 +272,36 @@ function createNewBuilding(
     } = event;
     const newEl: any = document.createElement(`a-${globalState.actionArg}`);
     const foundation: any = document.getElementById(state.id);
-    const isFoundation = foundation.getAttribute("a-machine")?.machine === "foundation"
-    const appendTarget = (isFoundation && globalState.foundationAppendTarget) || foundation.parentElement
+    const isFoundation =
+      foundation.getAttribute("a-machine")?.machine === "foundation";
+    const appendTarget =
+      (isFoundation && globalState.foundationAppendTarget) ||
+      foundation.parentElement;
     newEl.object3D.position.set(
       point.x,
-      point.y - appendTarget.object3D.position.y + 1,
+      point.y - appendTarget.object3D.position.y + 0.5,
       point.z
     );
+    if (!isFoundation) {
+      newEl.object3D.position.x += normal.x * 0.5;
+      newEl.object3D.position.y += normal.y * 0.5;
+      newEl.object3D.position.z += normal.z * 0.5;
+    }
     newEl.setAttribute("a-machine", { machine: "building" });
-    newEl.setAttribute("material", { color: "cyan" });
-    appendTarget.appendChild(newEl);
+    newEl.setAttribute("shadow", { cast: true, receive: true });
+    newEl.setAttribute("material", {
+      color: "cyan",
+    });
+    try {
+      deductEnergy(10);
+      if (
+        globalState.buildHook &&
+        typeof globalState.buildHook === "function"
+      ) {
+        globalState.buildHook(newEl);
+      }
+      appendTarget.appendChild(newEl);
+      emit("createdBuilding:builtins", { el: newEl });
+    } catch (_) {}
   }
 }

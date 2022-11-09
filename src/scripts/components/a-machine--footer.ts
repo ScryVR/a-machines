@@ -6,7 +6,7 @@ const ACTIONS = ["interact", "build", "multiselect", "set material"];
 const ACTIONS_WITH_ARGS = ["build", "set material"];
 const ARGS_BY_ACTION = {
   build: ["box", "sphere", "cylinder"],
-  "set material": ["red", "green", "blue"],
+  "set material": Object.keys(globalState.user.resources),
 };
 let template = /*html*/ `
 <style>
@@ -41,7 +41,7 @@ let template = /*html*/ `
 <scrolling-selector
   class="has-swiping-indicator"
   style="position: relative;"
-  options="${ACTIONS.join(",")}"
+  options="{{actions}}"
   mhandle="onSelectAction:select">
 </scrolling-selector>
 <scrolling-selector
@@ -57,6 +57,7 @@ registerMafiuComponent({
   template,
   data: {
     collapsed: true,
+    actions: ACTIONS.join(",")
   },
   hooks: {
     selectedAction: [
@@ -68,7 +69,7 @@ registerMafiuComponent({
       function (newVal: boolean) {
         if (newVal) {
           // @ts-ignore
-          const args = ARGS_BY_ACTION[this.state.selectedAction];
+          const args = getArgs(this.state.selectedAction);
           this.querySelector("#arg-selector").setAttribute(
             "options",
             args.join(",")
@@ -83,7 +84,7 @@ registerMafiuComponent({
   handlers: {
     onSelectAction(event: any) {
       this.state.selectedAction = event.detail.selection;
-      this.state.hasArg = ACTIONS_WITH_ARGS.includes(event.detail.selection);
+      this.state.hasArg = getArgs(event.detail.selection).length;
       this.querySelector(".has-swiping-indicator")?.classList.remove(
         "has-swiping-indicator"
       );
@@ -95,3 +96,14 @@ registerMafiuComponent({
     },
   },
 });
+
+function getArgs(action: string) {
+  switch (action) {
+    case "build":
+      return ["box", "sphere", "cylinder"]
+    case "set material":
+      return Object.keys(globalState.user.resources)
+    default:
+      return []
+  }
+}
