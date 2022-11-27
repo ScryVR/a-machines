@@ -15,6 +15,7 @@ export const buttonMachine = {
 };
 export const triggerTest = {
     name: "triggerTest",
+    canEmit: ["consumedResources:builtins"],
     listeners: {
         trigger: (event, state) => {
             if (!state.count) {
@@ -69,6 +70,7 @@ export const textRenderer = {
 };
 export const movingMachine = {
     name: "movingMachine",
+    canEmit: ["consumedResources:builtins"],
     listeners: {
         trigger: (event, state, emit) => {
             // NOTE: If I want to run this in a vertex worker, this is no good. Machines should instead invoke a builtin by emitting an event.
@@ -90,6 +92,7 @@ export const building = {
         "activateTouchListener:builtins",
         "createdBuilding:builtins",
         "modifiedBuilding:builtins",
+        "consumedResources:builtins"
     ],
     metadata: {
         drag: {
@@ -125,21 +128,38 @@ export const building = {
             emit("activateTouchListener:builtins", { id: state.id });
         },
         set_material: setMaterial,
+        setDragProperty: (event, state) => {
+            state.selectedProperty = event.detail.selectedProperty;
+            console.log("okay", state.selectedProperty);
+        },
         drag: (event, state, emit) => {
             const { x, y } = event.detail.delta;
+            const property = state.selectedProperty || "scale";
             if (Math.abs(x) > Math.abs(y)) {
+                let xAttribute = state.dragProperties.x.attribute;
+                if (property === "rotation") {
+                    xAttribute = state.dragProperties.y.attribute;
+                }
                 const { resizeMultiplier, offsetMultiplier } = state.dragProperties.x;
-                state.el.object3D.scale[state.dragProperties.x.attribute] +=
+                state.el.object3D[property][xAttribute] +=
                     (x / 100) * resizeMultiplier;
-                state.el.object3D.position[state.dragProperties.x.attribute] +=
-                    (x / 200) * offsetMultiplier;
+                if (property === "scale") {
+                    state.el.object3D.position[state.dragProperties.x.attribute] +=
+                        (x / 200) * offsetMultiplier;
+                }
             }
             else {
+                let yAttribute = state.dragProperties.y.attribute;
+                if (property === "rotation") {
+                    yAttribute = state.dragProperties.x.attribute;
+                }
                 const { resizeMultiplier, offsetMultiplier } = state.dragProperties.y;
-                state.el.object3D.scale[state.dragProperties.y.attribute] -=
+                state.el.object3D[property][yAttribute] -=
                     (y / 100) * resizeMultiplier;
-                state.el.object3D.position[state.dragProperties.y.attribute] -=
-                    (y / 200) * offsetMultiplier;
+                if (property === "scale") {
+                    state.el.object3D.position[state.dragProperties.y.attribute] -=
+                        (y / 200) * offsetMultiplier;
+                }
             }
             emit("modifiedBuilding:builtins", { el: state.el });
         },
@@ -155,6 +175,12 @@ export const building = {
             }
             emit("modifiedBuilding:builtins", { el: state.el });
         },
+        gridAlign: (event, state) => {
+            const { position, rotation } = state.el.object3D;
+            state.el.object3D.position.set(Math.round(position.x * 4) / 4, Math.round(position.y * 4) / 4, Math.round(position.z * 4) / 4);
+            const piOver4 = Math.PI / 4;
+            state.el.object3D.rotation.set(Math.round(rotation._x * piOver4) * piOver4, Math.round(rotation._y * piOver4) / piOver4, Math.round(rotation._z * piOver4) / piOver4);
+        },
         build: createNewBuilding,
         cancelBuilding: (event, state, emit) => {
             state.el.object3D.position.set(state.initialState.position.x, state.initialState.position.y, state.initialState.position.z);
@@ -167,6 +193,7 @@ export const building = {
             try {
                 // Handle energy costs
                 deductEnergy(10);
+                emit("consumedResources:builtins", { energy: 10 });
             }
             catch (err) {
                 // If insuffient resources or energy, revert building state.
@@ -174,13 +201,7 @@ export const building = {
                 state.el.object3D.scale.set(state.initialState.scale.x, state.initialState.scale.y, state.initialState.scale.z);
             }
             state.el.setAttribute("material", { transparent: true, opacity: 1 });
-            emit("modifiedBuilding:builtins", {
-                type: "object3D",
-                data: {
-                    position: state.el.object3D.position,
-                    scale: state.el.object3D.scale,
-                },
-            });
+            emit("modifiedBuilding:builtins", { el: state.el });
         },
     },
 };
@@ -200,8 +221,10 @@ function setMaterial(event, state, emit, globalState) {
     if (globalState.actionArg) {
         const resource = globalState.actionArg;
         const el = document.getElementById(state.id);
-        deductResources(resource, el.object3D.scale.x * el.object3D.scale.y * el.object3D.scale.z);
+        const resourcesConsumed = el.object3D.scale.x * el.object3D.scale.y * el.object3D.scale.z;
+        deductResources(resource, resourcesConsumed);
         deductEnergy(-1);
+        emit("consumedResources:builtins", { amount: resourcesConsumed, resource, energy: 1 });
         document
             .getElementById(state.id)
             .setAttribute("material", globalState.user.resources[globalState.actionArg].material);
@@ -210,7 +233,7 @@ function setMaterial(event, state, emit, globalState) {
 }
 function createNewBuilding(event, state, emit, globalState) {
     var _a;
-    if (["box", "sphere", "cylinder"].includes(globalState.actionArg)) {
+    if (["box", "sphere", "cylinder", ...(globalState.user.customBuildings || [])].includes(globalState.actionArg)) {
         const { detail: { intersection: { point, face: { normal }, }, }, } = event;
         const newEl = document.createElement(`a-${globalState.actionArg}`);
         const foundation = document.getElementById(state.id);
@@ -238,5 +261,8 @@ function createNewBuilding(event, state, emit, globalState) {
             emit("createdBuilding:builtins", { el: newEl });
         }
         catch (_) { }
+    }
+    else {
+        console.warn("Tried to create unknown building", globalState.actionArg);
     }
 }

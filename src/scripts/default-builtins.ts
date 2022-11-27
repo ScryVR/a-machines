@@ -24,6 +24,7 @@ function promptForTextListener(event: any) {
     return;
   }
   const textInputModal = document.createElement("div");
+  textInputModal.classList.add("a-machine-modal")
   textInputModal.innerHTML = "<textarea></textarea><button>Submit</button>";
   textInputModal.querySelector("button").addEventListener("click", () => {
     sendEventToTarget(event.detail.id, "_textChanged", {
@@ -43,7 +44,7 @@ export const activateTouchListener: IBuiltin = {
     },
   },
   listener: createDomTouchListener,
-  canEmit: ["drag", "twoFingerDrag"],
+  canEmit: ["drag", "twoFingerDrag", "setDragProperty"],
 };
 
 let dragTargetId: string = "";
@@ -73,12 +74,26 @@ function createDomTouchListener(event: any) {
       "To add custom UI to the touch listener, define a Web Component named <a-machine-touch-ui>"
     );
     touchListener.innerHTML =
-      "<button id='done-btn'>Done</button><button id='cancel-btn'>Cancel</button>";
+      /*html*/`
+      <button id='done-btn'>Done</button>
+      <button id='rotate-btn'>Rotate</button>
+      <button id='grid-btn'>Grid snap</button>
+      <button id='cancel-btn'>Cancel</button>
+      `;
     touchListener.querySelector("#done-btn").addEventListener("click", () => {
       sendEventToTarget(dragTargetId, "doneBuilding", {});
       touchListener.style.pointerEvents = "none";
       touchListener.style.visibility = "hidden";
     });
+    touchListener.querySelector("#rotate-btn").addEventListener("click", (event: any) => {
+      console.log("Okay, doing the thing")
+      event.target.classList.toggle("active")
+      const selectedProperty = event.target.classList.contains("active") ? "rotation" : "scale"
+      sendEventToTarget(dragTargetId, "setDragProperty", { selectedProperty })
+    })
+    touchListener.querySelector("#grid-btn").addEventListener("click", () => {
+      sendEventToTarget(dragTargetId, "gridAlign", {})
+    })
     touchListener.querySelector("#cancel-btn").addEventListener("click", () => {
       sendEventToTarget(dragTargetId, "cancelBuilding", {});
       touchListener.style.pointerEvents = "none";

@@ -96,7 +96,7 @@ registerMafiuComponent({
 function getArgs(action) {
     switch (action) {
         case "build":
-            return ["box", "sphere", "cylinder"];
+            return ["box", "sphere", "cylinder", ...(globalState.user.customBuildings || [])];
         case "set material":
             return Object.keys(globalState.user.resources);
         default:
