@@ -75,10 +75,12 @@ function createDomTouchListener(event: any) {
     );
     touchListener.innerHTML =
       /*html*/`
-      <button id='done-btn'>Done</button>
-      <button id='rotate-btn'>Rotate</button>
-      <button id='grid-btn'>Grid snap</button>
-      <button id='cancel-btn'>Cancel</button>
+      <div class="button-wrapper">
+        <button id='done-btn'>Done</button>
+        <button id='rotate-btn'>Rotate</button>
+        <button id='grid-btn'>Grid snap</button>
+        <button id='cancel-btn'>Cancel</button>
+      </div>
       `;
     touchListener.querySelector("#done-btn").addEventListener("click", () => {
       sendEventToTarget(dragTargetId, "doneBuilding", {});
