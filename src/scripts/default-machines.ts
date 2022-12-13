@@ -115,7 +115,6 @@ export const building: IMachine = {
   },
   listeners: {
     interact: (event: any, state: Record<string, any>, emit: Function) => {
-      console.log("State", state);
       state.el = document.getElementById(state.id);
       state.initialState = {
         position: { ...state.el.object3D.position },
@@ -147,7 +146,6 @@ export const building: IMachine = {
     set_material: setMaterial,
     setDragProperty: (event: any, state: Record<string, any>) => {
       state.selectedProperty = event.detail.selectedProperty
-      console.log("okay", state.selectedProperty)
     },
     drag: (event: any, state: Record<string, any>, emit: Function) => {
       const { x, y } = event.detail.delta;
@@ -229,12 +227,34 @@ export const building: IMachine = {
       emit: Function,
       globalState: Record<string, any>
     ) => {
-      // TODO: Handle resources according to the change in size
       try {
         // Handle energy costs
         deductEnergy(10);
         emit("consumedResources:builtins", { energy: 10 })
+
+        // Silently handle consuming resources for now - I'm lazy
+        if (state.el.hasAttribute("resource")) {
+          let resource = state.el.getAttribute("resource")
+          const { x, y, z } = state.el.object3D.scale
+          const newSize = x * y * z
+          const { x: oldX, y: oldY, z: oldZ } = state.initialState.scale
+          const oldSize = oldX * oldY * oldZ
+          try {
+            deductResources(resource, newSize - oldSize)
+            if (newSize < oldSize) {
+              // Making structures smaller doesn't give you all the resources back.
+              deductResources(resource, (oldSize - newSize) * 0.8)
+            }
+            console.log("modified resources due to size change")
+          } catch (err) {
+            // If the user doesn't have enough resources, at least give the energy back.
+            deductEnergy(-10)
+            throw err
+          }
+        }
+
       } catch (err) {
+        console.error("Couldn't finish building", err)
         // If insuffient resources or energy, revert building state.
         state.el.object3D.position.set(
           state.initialState.position.x,
@@ -274,21 +294,62 @@ function setMaterial(
 ) {
   if (globalState.actionArg) {
     const resource = globalState.actionArg;
-    const el = document.getElementById(state.id) as any;
-    const resourcesConsumed = el.object3D.scale.x * el.object3D.scale.y * el.object3D.scale.z
-    deductResources(
-      resource,
-      resourcesConsumed
-    );
-    deductEnergy(-1);
-    emit("consumedResources:builtins", { amount: resourcesConsumed, resource, energy: 1 })
-    document
-      .getElementById(state.id)
-      .setAttribute(
-        "material",
-        globalState.user.resources[globalState.actionArg].material
+    // @ts-ignore
+    const currentResource = document.getElementById(state.id).getAttribute("resource") as any
+    const selectedResource = globalState.actionArg
+    if (currentResource !== selectedResource) {
+      const el = document.getElementById(state.id) as any;
+      const resourcesConsumed = el.object3D.scale.x * el.object3D.scale.y * el.object3D.scale.z
+      if (currentResource) {
+        console.log("Should give back some resources...")
+        // We are silently giving resources back for now. I'll worry about emitting an event later.
+        // Recycling resources isn't 100% efficient.
+        if (!globalState.user.resources[currentResource]) {
+          globalState.user.resources[currentResource] = {
+            quantity: 0,
+            material: Object.entries(el.getAttribute("material")).reduce((acc, [key, val]) => {
+              if (["color", "transparent", "opacity", "shader", "wireframe", "emissive", "emissiveIntensity"].includes(key)) {
+                acc[key] = val
+              }
+              return acc
+            }, {} as any)
+          }
+          if (el.hasAttribute("light")) {
+            globalState.user.resources[currentResource].light = Object.entries(el.getAttribute("light").reduce((acc: any, [key, val]: [string, any]) => {
+              if (["color", "intensity", "decay", "distance", "type", "castShadow"].includes(key)) {
+                acc[key] = val
+              }
+              return acc
+            }, {} as any))
+          }
+        }
+        globalState.user.resources[currentResource].quantity += 0.8 * resourcesConsumed
+      }
+      deductResources(
+        resource,
+        resourcesConsumed
       );
-    emit(`modifiedBuilding:builtins`, { el });
+      deductEnergy(-1);
+      emit("consumedResources:builtins", { amount: resourcesConsumed, resource, energy: 1 })
+      document
+        .getElementById(state.id)
+        .setAttribute(
+          "material",
+          globalState.user.resources[selectedResource].material
+        );
+      if (globalState.user.resources[selectedResource].light) {
+        document
+          .getElementById(state.id)
+          .setAttribute(
+            "light",
+            globalState.user.resources[selectedResource].light
+          );
+      } else {
+        document.getElementById(state.id).removeAttribute("light")
+      }
+      document.getElementById(state.id).setAttribute("resource", selectedResource)
+      emit(`modifiedBuilding:builtins`, { el });
+    }
   }
 }
 

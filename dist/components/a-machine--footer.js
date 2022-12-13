@@ -98,7 +98,7 @@ function getArgs(action) {
         case "build":
             return ["box", "sphere", "cylinder", ...(globalState.user.customBuildings || [])];
         case "set material":
-            return Object.keys(globalState.user.resources);
+            return Object.keys(globalState.user.resources).filter(key => globalState.user.resources[key].quantity);
         default:
             return [];
     }
