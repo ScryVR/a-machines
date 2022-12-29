@@ -1,14 +1,14 @@
-import { globalState } from "../a-machine";
+import { machineState } from "../machineState";
 export function deductEnergy(cost) {
-    if (globalState.user.energy < cost) {
+    if (machineState.user.energy < cost) {
         throw new Error("Insufficient energy");
     }
-    globalState.user.energy -= cost;
+    machineState.user.energy -= cost;
 }
 export function deductResources(resource, consumption) {
     var _a;
-    if (((_a = globalState.user.resources[resource]) === null || _a === void 0 ? void 0 : _a.quantity) < consumption) {
+    if (((_a = machineState.user.resources[resource]) === null || _a === void 0 ? void 0 : _a.quantity) < consumption) {
         throw new Error("Insufficient resources");
     }
-    globalState.user.resources[resource].quantity -= consumption;
+    machineState.user.resources[resource].quantity -= consumption;
 }

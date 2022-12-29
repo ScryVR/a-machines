@@ -7,10 +7,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { globalState } from "../a-machine";
+import { machineState } from "../machineState";
 export function onInsufficientEnergy() {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("Adding free energy");
-        globalState.energy = 100;
+        machineState.energy = 100;
     });
 }

@@ -1,6 +1,6 @@
-import { globalState } from "../a-machine"
+import { machineState } from "../machineState"
 
 export async function onInsufficientEnergy() {
   console.log("Adding free energy")
-  globalState.energy = 100
+  machineState.energy = 100
 }

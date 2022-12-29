@@ -1,12 +1,12 @@
 // @ts-ignore
 import { registerMafiuComponent } from "mafiu/dist/generator";
-import { globalState } from "../a-machine";
+import { machineState } from "../machineState";
 const name = "a-machine--footer";
 const ACTIONS = ["interact", "build", "multiselect", "set material"];
 const ACTIONS_WITH_ARGS = ["build", "set material"];
 const ARGS_BY_ACTION = {
     build: ["box", "sphere", "cylinder"],
-    "set material": Object.keys(globalState.user.resources),
+    "set material": Object.keys(machineState.user.resources),
 };
 let template = /*html*/ `
 <style>
@@ -62,7 +62,7 @@ registerMafiuComponent({
     hooks: {
         selectedAction: [
             (action) => {
-                globalState.selectedAction = action.replace(/\s/g, "_"); // TODO: find a better way of converting between nice human names and action names
+                machineState.selectedAction = action.replace(/\s/g, "_"); // TODO: find a better way of converting between nice human names and action names
             },
         ],
         hasArg: [
@@ -88,7 +88,7 @@ registerMafiuComponent({
             this.dispatchEvent(new CustomEvent("selection", { detail: { action: event.detail.selection } }));
         },
         onSelectArg(event) {
-            globalState.actionArg = event.detail.selection;
+            machineState.actionArg = event.detail.selection;
             this.dispatchEvent(new CustomEvent("selection", { detail: { arg: event.detail.selection } }));
         },
     },
@@ -96,9 +96,9 @@ registerMafiuComponent({
 function getArgs(action) {
     switch (action) {
         case "build":
-            return ["box", "sphere", "cylinder", ...(globalState.user.customBuildings || [])];
+            return ["box", "sphere", "cylinder", ...(machineState.user.customBuildings || [])];
         case "set material":
-            return Object.keys(globalState.user.resources).filter(key => globalState.user.resources[key].quantity);
+            return Object.keys(machineState.user.resources).filter(key => machineState.user.resources[key].quantity);
         default:
             return [];
     }
