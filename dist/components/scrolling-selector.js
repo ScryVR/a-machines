@@ -96,6 +96,9 @@ registerMafiuComponent({
             // Update selected action
             const buttons = Array.from(event.target.querySelectorAll("button"));
             const buttonIndex = Math.round(event.target.scrollTop / 40);
+            if (!buttons[buttonIndex]) {
+                return;
+            }
             this.state.selectedBtn = buttons[buttonIndex];
             this.state.selectedOption =
                 this.state.selectedBtn.getAttribute("data-option");
