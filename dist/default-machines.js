@@ -92,7 +92,9 @@ export const building = {
         "activateTouchListener:builtins",
         "createdBuilding:builtins",
         "modifiedBuilding:builtins",
-        "consumedResources:builtins"
+        "consumedResources:builtins",
+        "outOfEnergy:builtins",
+        "outOfResources:builtins",
     ],
     metadata: {
         drag: {
@@ -189,15 +191,16 @@ export const building = {
         doneBuilding: (event, state, emit, globalState) => {
             try {
                 // Handle energy costs
-                deductEnergy(10);
-                emit("consumedResources:builtins", { energy: 10 });
+                const { x, y, z } = state.el.object3D.scale;
+                const newSize = x * y * z;
+                const { x: oldX, y: oldY, z: oldZ } = state.initialState.scale;
+                const oldSize = oldX * oldY * oldZ;
+                const energyCost = Math.ceil(Math.abs(newSize - oldSize) / 4);
+                deductEnergy(energyCost);
+                emit("consumedResources:builtins", { energy: 2 });
                 // Silently handle consuming resources for now - I'm lazy
                 if (state.el.hasAttribute("resource")) {
                     let resource = state.el.getAttribute("resource");
-                    const { x, y, z } = state.el.object3D.scale;
-                    const newSize = x * y * z;
-                    const { x: oldX, y: oldY, z: oldZ } = state.initialState.scale;
-                    const oldSize = oldX * oldY * oldZ;
                     try {
                         deductResources(resource, newSize - oldSize);
                         if (newSize < oldSize) {
@@ -208,7 +211,7 @@ export const building = {
                     }
                     catch (err) {
                         // If the user doesn't have enough resources, at least give the energy back.
-                        deductEnergy(-10);
+                        deductEnergy(energyCost);
                         throw err;
                     }
                 }
@@ -218,6 +221,7 @@ export const building = {
                 // If insuffient resources or energy, revert building state.
                 state.el.object3D.position.set(state.initialState.position.x, state.initialState.position.y, state.initialState.position.z);
                 state.el.object3D.scale.set(state.initialState.scale.x, state.initialState.scale.y, state.initialState.scale.z);
+                handleOverdraw(err, emit, event);
             }
             state.el.setAttribute("material", { transparent: true, opacity: 1 });
             emit("modifiedBuilding:builtins", { el: state.el });
@@ -229,7 +233,11 @@ export const foundation = {
     listeners: {
         build: createNewBuilding,
     },
-    canEmit: ["createdBuilding:builtins"],
+    canEmit: [
+        "createdBuilding:builtins",
+        "outOfEnergy:builtins",
+        "outOfResources:builtins",
+    ],
     metadata: {
         build: {
             description: "Create a new structure.",
@@ -270,22 +278,27 @@ function setMaterial(event, state, emit, globalState) {
                 }
                 globalState.user.resources[currentResource].quantity += 0.8 * resourcesConsumed;
             }
-            deductResources(resource, resourcesConsumed);
-            deductEnergy(-1);
-            emit("consumedResources:builtins", { amount: resourcesConsumed, resource, energy: 1 });
-            document
-                .getElementById(state.id)
-                .setAttribute("material", globalState.user.resources[selectedResource].material);
-            if (globalState.user.resources[selectedResource].light) {
+            try {
+                deductResources(resource, resourcesConsumed);
+                deductEnergy(1);
+                emit("consumedResources:builtins", { amount: resourcesConsumed, resource, energy: 1 });
                 document
                     .getElementById(state.id)
-                    .setAttribute("light", globalState.user.resources[selectedResource].light);
+                    .setAttribute("material", globalState.user.resources[selectedResource].material);
+                if (globalState.user.resources[selectedResource].light) {
+                    document
+                        .getElementById(state.id)
+                        .setAttribute("light", globalState.user.resources[selectedResource].light);
+                }
+                else {
+                    document.getElementById(state.id).removeAttribute("light");
+                }
+                document.getElementById(state.id).setAttribute("resource", selectedResource);
+                emit(`modifiedBuilding:builtins`, { el });
             }
-            else {
-                document.getElementById(state.id).removeAttribute("light");
+            catch (err) {
+                handleOverdraw(err, emit, event);
             }
-            document.getElementById(state.id).setAttribute("resource", selectedResource);
-            emit(`modifiedBuilding:builtins`, { el });
         }
     }
 }
@@ -310,7 +323,7 @@ function createNewBuilding(event, state, emit, globalState) {
             color: "cyan",
         });
         try {
-            deductEnergy(10);
+            deductEnergy(2);
             if (globalState.buildHook &&
                 typeof globalState.buildHook === "function") {
                 globalState.buildHook(newEl);
@@ -318,9 +331,19 @@ function createNewBuilding(event, state, emit, globalState) {
             appendTarget.appendChild(newEl);
             emit("createdBuilding:builtins", { el: newEl });
         }
-        catch (_) { }
+        catch (err) {
+            handleOverdraw(err, emit, event);
+        }
     }
     else {
         console.warn("Tried to create unknown building", globalState.actionArg);
+    }
+}
+function handleOverdraw(err, emit, event) {
+    if (err.message === "Insufficient energy") {
+        emit("outOfEnergy:builtins", { event });
+    }
+    else {
+        emit("outOfResources:builtins", { event });
     }
 }
