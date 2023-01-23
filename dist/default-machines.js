@@ -175,6 +175,31 @@ export const building = {
             }
             emit("modifiedBuilding:builtins", { el: state.el });
         },
+        setInitialCentroid: (event, state) => {
+            state.initialCentroid = event.detail.centroid;
+            // state.initialRotation = event.detail.rotation
+            state.el = document.getElementById(state.id);
+        },
+        moveCentroid: (event, state) => {
+            if (!state.initialCentroid || !state.initialState) {
+                return;
+            }
+            if (!state.el) {
+                state.el = document.getElementById(state.id);
+            }
+            // const offsetPos = {
+            //   x: state.initialState.position.x + (event.detail.centroid.x - state.initialCentroid.x),
+            //   y: state.initialState.position.y + (event.detail.centroid.y - state.initialCentroid.y),
+            //   z: state.initialState.position.z + (event.detail.centroid.z - state.initialCentroid.z),
+            // }
+            // const offsetRotation = {
+            //   x: event.detail.rotation.x - state.initialRotation.x,
+            //   y: event.detail.rotation.x - state.initialRotation.y,
+            //   z: event.detail.rotation.x - state.initialRotation.z,
+            // }
+            state.el.object3D.position.set(event.detail.centroid.x, event.detail.centroid.y, event.detail.centroid.z);
+            // state.el.object3D.rotation.set(offsetRotation.x, offsetRotation.y, offsetRotation.z)
+        },
         gridAlign: (event, state) => {
             const { position, rotation } = state.el.object3D;
             state.el.object3D.position.set(Math.round(position.x * 4) / 4, Math.round(position.y * 4) / 4, Math.round(position.z * 4) / 4);
@@ -197,7 +222,7 @@ export const building = {
                 const oldSize = oldX * oldY * oldZ;
                 const energyCost = Math.ceil(Math.abs(newSize - oldSize) / 4);
                 deductEnergy(energyCost);
-                emit("consumedResources:builtins", { energy: 2 });
+                emit("consumedResources:builtins", { energy: energyCost });
                 // Silently handle consuming resources for now - I'm lazy
                 if (state.el.hasAttribute("resource")) {
                     let resource = state.el.getAttribute("resource");

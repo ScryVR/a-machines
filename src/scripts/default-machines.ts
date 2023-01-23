@@ -190,6 +190,16 @@ export const building: IMachine = {
       }
       emit("modifiedBuilding:builtins", { el: state.el });
     },
+    moveCentroid: (event: any, state: Record<string, any>) => {
+      if (!state.initialState) {
+        return
+      }
+      if (!state.el) {
+        state.el = document.getElementById(state.id)
+      }
+      state.el.object3D.position.set(event.detail.centroid.x, event.detail.centroid.y, event.detail.centroid.z)
+      // state.el.object3D.rotation.set(offsetRotation.x, offsetRotation.y, offsetRotation.z)
+    },
     gridAlign: (event: any, state: Record<string, any>) => {
       const { position, rotation } = state.el.object3D
       state.el.object3D.position.set(
@@ -237,7 +247,7 @@ export const building: IMachine = {
         const oldSize = oldX * oldY * oldZ
         const energyCost = Math.ceil(Math.abs(newSize - oldSize) / 4)
         deductEnergy(energyCost);
-        emit("consumedResources:builtins", { energy: 2 })
+        emit("consumedResources:builtins", { energy: energyCost })
         // Silently handle consuming resources for now - I'm lazy
         if (state.el.hasAttribute("resource")) {
           let resource = state.el.getAttribute("resource")

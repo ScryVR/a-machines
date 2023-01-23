@@ -96,8 +96,8 @@ export function registerMachine(machine: IMachine) {
 }
 
 export const builtinRegistry: Record<string, IBuiltin> = {};
-export function registerBuiltin(event: string, builtin: IBuiltin) {
-  if (builtinRegistry[event]) {
+export function registerBuiltin(event: string, builtin: IBuiltin, override: boolean = false) {
+  if (builtinRegistry[event] && !override) {
     throw new Error(
       `a-machine tried to register ${event}, but a built-in with this name is already registered`
     );
