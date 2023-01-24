@@ -175,28 +175,26 @@ export const building = {
             }
             emit("modifiedBuilding:builtins", { el: state.el });
         },
-        setInitialCentroid: (event, state) => {
-            state.initialCentroid = event.detail.centroid;
-            // state.initialRotation = event.detail.rotation
-            state.el = document.getElementById(state.id);
+        scaleChange: (event, state) => {
+            console.log("aefof");
+            if (!state.initialState) {
+                return;
+            }
+            console.log("befof", event);
+            const newScale = {
+                x: event.detail.scaleChange.x * state.initialState.scale.x,
+                y: event.detail.scaleChange.y * state.initialState.scale.y,
+                z: event.detail.scaleChange.z * state.initialState.scale.z,
+            };
+            state.el.object3D.scale.set(newScale.x, newScale.y, newScale.z);
         },
         moveCentroid: (event, state) => {
-            if (!state.initialCentroid || !state.initialState) {
+            if (!state.initialState) {
                 return;
             }
             if (!state.el) {
                 state.el = document.getElementById(state.id);
             }
-            // const offsetPos = {
-            //   x: state.initialState.position.x + (event.detail.centroid.x - state.initialCentroid.x),
-            //   y: state.initialState.position.y + (event.detail.centroid.y - state.initialCentroid.y),
-            //   z: state.initialState.position.z + (event.detail.centroid.z - state.initialCentroid.z),
-            // }
-            // const offsetRotation = {
-            //   x: event.detail.rotation.x - state.initialRotation.x,
-            //   y: event.detail.rotation.x - state.initialRotation.y,
-            //   z: event.detail.rotation.x - state.initialRotation.z,
-            // }
             state.el.object3D.position.set(event.detail.centroid.x, event.detail.centroid.y, event.detail.centroid.z);
             // state.el.object3D.rotation.set(offsetRotation.x, offsetRotation.y, offsetRotation.z)
         },

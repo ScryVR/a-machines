@@ -190,6 +190,17 @@ export const building: IMachine = {
       }
       emit("modifiedBuilding:builtins", { el: state.el });
     },
+    scaleChange: (event: any, state: Record<string, any>) => {
+      if (!state.initialState) {
+        return
+      }
+      const newScale = {
+        x: event.detail.scaleChange.x * state.initialState.scale.x,
+        y: event.detail.scaleChange.y * state.initialState.scale.y,
+        z: event.detail.scaleChange.z * state.initialState.scale.z,
+      }
+      state.el.object3D.scale.set(newScale.x, newScale.y, newScale.z)
+    },
     moveCentroid: (event: any, state: Record<string, any>) => {
       if (!state.initialState) {
         return
