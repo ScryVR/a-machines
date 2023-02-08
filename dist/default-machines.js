@@ -110,6 +110,7 @@ export const building = {
             state.initialState = {
                 position: Object.assign({}, state.el.object3D.position),
                 scale: Object.assign({}, state.el.object3D.scale),
+                rotation: Object.assign({}, state.el.object3D.rotation)
             };
             state.el.setAttribute("material", { transparent: true, opacity: 0.7 });
             const { face: { normal: { x, y, z }, }, uv, } = event.detail.intersection;
@@ -176,11 +177,9 @@ export const building = {
             emit("modifiedBuilding:builtins", { el: state.el });
         },
         scaleChange: (event, state) => {
-            console.log("aefof");
             if (!state.initialState) {
                 return;
             }
-            console.log("befof", event);
             const newScale = {
                 x: event.detail.scaleChange.x * state.initialState.scale.x,
                 y: event.detail.scaleChange.y * state.initialState.scale.y,
@@ -188,7 +187,19 @@ export const building = {
             };
             state.el.object3D.scale.set(newScale.x, newScale.y, newScale.z);
         },
-        moveCentroid: (event, state) => {
+        rotationChange: (event, state, emit) => {
+            if (!state.initialState) {
+                return;
+            }
+            const newRotation = {
+                x: event.detail.rotationChange.x + state.initialState.rotation._x,
+                y: event.detail.rotationChange.y + state.initialState.rotation._y,
+                z: event.detail.rotationChange.z + state.initialState.rotation._z,
+            };
+            state.el.object3D.rotation.set(newRotation.x, newRotation.y, newRotation.z);
+            emit("modifiedBuilding:builtins", { el: state.el });
+        },
+        moveCentroid: (event, state, emit) => {
             if (!state.initialState) {
                 return;
             }
@@ -196,7 +207,7 @@ export const building = {
                 state.el = document.getElementById(state.id);
             }
             state.el.object3D.position.set(event.detail.centroid.x, event.detail.centroid.y, event.detail.centroid.z);
-            // state.el.object3D.rotation.set(offsetRotation.x, offsetRotation.y, offsetRotation.z)
+            emit("modifiedBuilding:builtins", { el: state.el });
         },
         gridAlign: (event, state) => {
             const { position, rotation } = state.el.object3D;
@@ -208,6 +219,7 @@ export const building = {
         cancelBuilding: (event, state, emit) => {
             state.el.object3D.position.set(state.initialState.position.x, state.initialState.position.y, state.initialState.position.z);
             state.el.object3D.scale.set(state.initialState.scale.x, state.initialState.scale.y, state.initialState.scale.z);
+            state.el.object3D.rotation.set(state.initialState.rotation._x, state.initialState.rotation._y, state.initialState.rotation._z);
             state.el.setAttribute("material", { transparent: true, opacity: 1 });
             emit("modifiedBuilding:builtins", { el: state.el });
         },
@@ -327,18 +339,26 @@ function setMaterial(event, state, emit, globalState) {
 }
 function createNewBuilding(event, state, emit, globalState) {
     var _a;
-    if (["box", "sphere", "cylinder", ...(globalState.user.customBuildings || [])].includes(globalState.actionArg)) {
+    const element = document.getElementById(state.id);
+    let tag = globalState.actionArg;
+    let scale = { x: 1, y: 1, z: 1 };
+    if (globalState.actionArg === "copy") {
+        tag = document.getElementById(state.id).tagName.toLowerCase().replace("a-", "");
+        scale = element.object3D.scale;
+    }
+    if (["box", "sphere", "cylinder", ...(globalState.user.customBuildings || [])].includes(tag)) {
         const { detail: { intersection: { point, face: { normal }, }, }, } = event;
-        const newEl = document.createElement(`a-${globalState.actionArg}`);
+        const newEl = document.createElement(`a-${tag}`);
         const foundation = document.getElementById(state.id);
         const isFoundation = ((_a = foundation.getAttribute("a-machine")) === null || _a === void 0 ? void 0 : _a.machine) === "foundation";
         const appendTarget = (isFoundation && globalState.foundationAppendTarget) ||
             foundation.parentElement;
-        newEl.object3D.position.set(point.x, point.y - appendTarget.object3D.position.y + 0.5, point.z);
+        newEl.object3D.position.set(point.x, point.y - appendTarget.object3D.position.y + scale.y / 2, point.z);
+        newEl.object3D.scale.set(scale.x, scale.y, scale.z);
         if (!isFoundation) {
-            newEl.object3D.position.x += normal.x * 0.5;
-            newEl.object3D.position.y += normal.y * 0.5;
-            newEl.object3D.position.z += normal.z * 0.5;
+            newEl.object3D.position.x += normal.x * scale.x / 2;
+            newEl.object3D.position.y += normal.y * scale.y / 2;
+            newEl.object3D.position.z += normal.z * scale.z / 2;
         }
         newEl.setAttribute("a-machine", { machine: "building" });
         newEl.setAttribute("shadow", { cast: true, receive: true });

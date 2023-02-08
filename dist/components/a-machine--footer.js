@@ -3,11 +3,6 @@ import { registerMafiuComponent } from "mafiu/dist/generator";
 import { machineState } from "../machineState";
 const name = "a-machine--footer";
 const ACTIONS = ["interact", "build", "multiselect", "set material"];
-const ACTIONS_WITH_ARGS = ["build", "set material"];
-const ARGS_BY_ACTION = {
-    build: ["box", "sphere", "cylinder"],
-    "set material": Object.keys(machineState.user.resources),
-};
 let template = /*html*/ `
 <style>
   scrolling-selector.has-swiping-indicator::before {
@@ -96,7 +91,7 @@ registerMafiuComponent({
 function getArgs(action) {
     switch (action) {
         case "build":
-            return ["box", "sphere", "cylinder", ...(machineState.user.customBuildings || [])];
+            return ["box", "sphere", "cylinder", "copy", ...(machineState.user.customBuildings || [])];
         case "set material":
             return Object.keys(machineState.user.resources).filter(key => machineState.user.resources[key].quantity);
         default:

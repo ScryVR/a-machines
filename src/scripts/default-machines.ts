@@ -121,6 +121,7 @@ export const building: IMachine = {
       state.initialState = {
         position: { ...state.el.object3D.position },
         scale: { ...state.el.object3D.scale },
+        rotation: { ...state.el.object3D.rotation }
       };
       state.el.setAttribute("material", { transparent: true, opacity: 0.7 });
       const {
@@ -201,7 +202,19 @@ export const building: IMachine = {
       }
       state.el.object3D.scale.set(newScale.x, newScale.y, newScale.z)
     },
-    moveCentroid: (event: any, state: Record<string, any>) => {
+    rotationChange: (event: any, state: Record<string, any>, emit: Function) => {
+      if (!state.initialState) {
+        return
+      }
+      const newRotation = {
+        x: event.detail.rotationChange.x + state.initialState.rotation._x,
+        y: event.detail.rotationChange.y + state.initialState.rotation._y,
+        z: event.detail.rotationChange.z + state.initialState.rotation._z,
+      }
+      state.el.object3D.rotation.set(newRotation.x, newRotation.y, newRotation.z)
+      emit("modifiedBuilding:builtins", { el: state.el });
+    },
+    moveCentroid: (event: any, state: Record<string, any>, emit: Function) => {
       if (!state.initialState) {
         return
       }
@@ -209,7 +222,7 @@ export const building: IMachine = {
         state.el = document.getElementById(state.id)
       }
       state.el.object3D.position.set(event.detail.centroid.x, event.detail.centroid.y, event.detail.centroid.z)
-      // state.el.object3D.rotation.set(offsetRotation.x, offsetRotation.y, offsetRotation.z)
+      emit("modifiedBuilding:builtins", { el: state.el });
     },
     gridAlign: (event: any, state: Record<string, any>) => {
       const { position, rotation } = state.el.object3D
@@ -241,6 +254,11 @@ export const building: IMachine = {
         state.initialState.scale.y,
         state.initialState.scale.z
       );
+      state.el.object3D.rotation.set(
+        state.initialState.rotation._x,
+        state.initialState.rotation._y,
+        state.initialState.rotation._z,
+      )
       state.el.setAttribute("material", { transparent: true, opacity: 1 });
       emit("modifiedBuilding:builtins", { el: state.el });
     },
@@ -391,7 +409,14 @@ function createNewBuilding(
   emit: Function,
   globalState: Record<string, any>
 ) {
-  if (["box", "sphere", "cylinder", ...( globalState.user.customBuildings || [])].includes(globalState.actionArg)) {
+  const element = document.getElementById(state.id) as any
+  let tag = globalState.actionArg
+  let scale = { x: 1, y: 1, z: 1 }
+  if (globalState.actionArg === "copy") {
+    tag = document.getElementById(state.id).tagName.toLowerCase().replace("a-", "")
+    scale = element.object3D.scale
+  }
+  if (["box", "sphere", "cylinder", ...( globalState.user.customBuildings || [])].includes(tag)) {
     const {
       detail: {
         intersection: {
@@ -400,7 +425,7 @@ function createNewBuilding(
         },
       },
     } = event;
-    const newEl: any = document.createElement(`a-${globalState.actionArg}`);
+    const newEl: any = document.createElement(`a-${tag}`);
     const foundation: any = document.getElementById(state.id);
     const isFoundation =
       foundation.getAttribute("a-machine")?.machine === "foundation";
@@ -409,13 +434,14 @@ function createNewBuilding(
       foundation.parentElement;
     newEl.object3D.position.set(
       point.x,
-      point.y - appendTarget.object3D.position.y + 0.5,
+      point.y - appendTarget.object3D.position.y + scale.y / 2,
       point.z
     );
+    newEl.object3D.scale.set(scale.x, scale.y, scale.z)
     if (!isFoundation) {
-      newEl.object3D.position.x += normal.x * 0.5;
-      newEl.object3D.position.y += normal.y * 0.5;
-      newEl.object3D.position.z += normal.z * 0.5;
+      newEl.object3D.position.x += normal.x * scale.x / 2;
+      newEl.object3D.position.y += normal.y * scale.y / 2;
+      newEl.object3D.position.z += normal.z * scale.z / 2;
     }
     newEl.setAttribute("a-machine", { machine: "building" });
     newEl.setAttribute("shadow", { cast: true, receive: true });
