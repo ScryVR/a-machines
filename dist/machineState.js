@@ -1,5 +1,4 @@
 export const machineState = {
-    buildMode: "edit",
     selectedAction: "interact",
     // Todo: replace with class instance
     user: {

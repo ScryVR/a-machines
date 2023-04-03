@@ -1,1 +1,66 @@
-#overlay{align-items:center;display:flex;justify-content:center}#overlay>div{display:flex;flex-direction:column}#overlay>div>textarea{min-height:400px;min-width:300px}body,button,html,input{font-family:Fira Code,monospace}.a-machine-touch-listener{align-items:center;display:flex;flex-direction:column;height:100vh;justify-content:flex-end;left:0;position:fixed;top:0;width:100vw}.a-machine-touch-listener button{display:inline-block;margin:6px 0;padding:.8em 1.2em}a-machine--footer{bottom:0;display:flex;justify-content:center;left:0;padding-bottom:64px;pointer-events:none!important;position:fixed;width:100%}a-machine--footer scrolling-selector{box-sizing:border-box;padding:0 16px}a-machine--footer button{cursor:pointer;pointer-events:auto!important}.noselect{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+/*!*************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js!./src/styles/main.scss ***!
+  \*************************************************************************************************************************************************************************************/
+#overlay {
+  display: flex;
+  justify-content: center;
+  align-items: center; }
+  #overlay > div {
+    display: flex;
+    flex-direction: column; }
+    #overlay > div > textarea {
+      min-width: 300px;
+      min-height: 400px; }
+
+body, html, button, input {
+  font-family: 'Fira Code', monospace; }
+
+.a-machine-touch-listener {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center; }
+
+.a-machine-touch-listener button {
+  display: inline-block;
+  padding: 0.8em 1.2em;
+  margin: 6px 0; }
+
+a-machine--footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  padding-bottom: 64px;
+  pointer-events: none !important; }
+
+a-machine--footer scrolling-selector {
+  box-sizing: border-box;
+  padding: 0 16px; }
+
+a-machine--footer button {
+  pointer-events: auto !important;
+  cursor: pointer; }
+
+.noselect {
+  -webkit-touch-callout: none;
+  /* iOS Safari */
+  -webkit-user-select: none;
+  /* Safari */
+  -khtml-user-select: none;
+  /* Konqueror HTML */
+  -moz-user-select: none;
+  /* Old versions of Firefox */
+  -ms-user-select: none;
+  /* Internet Explorer/Edge */
+  user-select: none;
+  /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */ }
+

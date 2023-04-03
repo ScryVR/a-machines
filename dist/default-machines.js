@@ -72,6 +72,12 @@ export const movingMachine = {
     name: "movingMachine",
     canEmit: ["consumedResources:builtins"],
     listeners: {
+        interact: (event, state, emit) => {
+            // NOTE: If I want to run this in a vertex worker, this is no good. Machines should instead invoke a builtin by emitting an event.
+            // This is okay just for development
+            const entity = document.getElementById(state.id);
+            entity.emit("startAnimation", null, false);
+        },
         trigger: (event, state, emit) => {
             // NOTE: If I want to run this in a vertex worker, this is no good. Machines should instead invoke a builtin by emitting an event.
             // This is okay just for development
@@ -176,25 +182,39 @@ export const building = {
             }
             emit("modifiedBuilding:builtins", { el: state.el });
         },
-        scaleChange: (event, state) => {
+        setCurrentState: (event, state) => {
             if (!state.initialState) {
                 return;
             }
+            state.currentState = {
+                position: Object.assign({}, state.el.object3D.position),
+                scale: Object.assign({}, state.el.object3D.scale),
+                rotation: Object.assign({}, state.el.object3D.rotation)
+            };
+        },
+        scaleChange: (event, state) => {
+            var _a;
+            if (!state.initialState) {
+                return;
+            }
+            const scale = ((_a = state.currentState) === null || _a === void 0 ? void 0 : _a.scale) || state.initialState.scale;
             const newScale = {
-                x: event.detail.scaleChange.x * state.initialState.scale.x,
-                y: event.detail.scaleChange.y * state.initialState.scale.y,
-                z: event.detail.scaleChange.z * state.initialState.scale.z,
+                x: event.detail.scaleChange.x * scale.x,
+                y: event.detail.scaleChange.y * scale.y,
+                z: event.detail.scaleChange.z * scale.z,
             };
             state.el.object3D.scale.set(newScale.x, newScale.y, newScale.z);
         },
         rotationChange: (event, state, emit) => {
+            var _a;
             if (!state.initialState) {
                 return;
             }
+            const rotation = ((_a = state.currentState) === null || _a === void 0 ? void 0 : _a.rotation) || state.initialState.rotation;
             const newRotation = {
-                x: event.detail.rotationChange.x + state.initialState.rotation._x,
-                y: event.detail.rotationChange.y + state.initialState.rotation._y,
-                z: event.detail.rotationChange.z + state.initialState.rotation._z,
+                x: event.detail.rotationChange.x + rotation._x,
+                y: event.detail.rotationChange.y + rotation._y,
+                z: event.detail.rotationChange.z + rotation._z,
             };
             state.el.object3D.rotation.set(newRotation.x, newRotation.y, newRotation.z);
             emit("modifiedBuilding:builtins", { el: state.el });
@@ -319,7 +339,7 @@ function setMaterial(event, state, emit, globalState) {
                 emit("consumedResources:builtins", { amount: resourcesConsumed, resource, energy: 1 });
                 document
                     .getElementById(state.id)
-                    .setAttribute("material", globalState.user.resources[selectedResource].material);
+                    .setAttribute("material", Object.assign({ shader: "standard" }, globalState.user.resources[selectedResource].material));
                 if (globalState.user.resources[selectedResource].light) {
                     document
                         .getElementById(state.id)

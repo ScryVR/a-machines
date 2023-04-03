@@ -1,5 +1,4 @@
 export const machineState: Record<string, any> = {
-  buildMode: "edit",
   selectedAction: "interact",
   // Todo: replace with class instance
   user: {

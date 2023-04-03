@@ -19,7 +19,7 @@ let template = /*html*/ `
     animation-delay: 3s;
   }
   @keyframes swipe {
-    from, to { top: 50px; opacity: 1; }
+    from, to { top: 70px; opacity: 1; }
     90% { top: 20px; opacity: 1; }
   }
   scrolling-selector {
@@ -96,8 +96,10 @@ function getArgs(action: string) {
   switch (action) {
     case "build":
       return ["box", "sphere", "cylinder", "copy", ...(machineState.user.customBuildings || [])]
+    case "multiselect":
+      return ["select", "unselect", "create blueprint", "edit"]
     case "set material":
-      return Object.keys(machineState.user.resources).filter(key => machineState.user.resources[key].quantity)
+      return Object.keys(machineState.user.resources).filter(key => machineState.user.resources[key].quantity).sort()
     default:
       return []
   }
