@@ -1,4 +1,5 @@
 import { IMachine } from "./a-machine";
+import { select, unselect } from "./handleMultiselect";
 import {
   deductEnergy,
   deductResources,
@@ -123,6 +124,15 @@ export const building: IMachine = {
     },
   },
   listeners: {
+    multiselect: (event: any, state: Record<string, any>, emit: Function, globalState: Record<string, any>) => {
+      if (globalState.actionArg === "select") {
+        console.log("Should select")
+        select(event, state, emit, globalState)
+      } else if (globalState.actionArg === "unselect") {
+        console.log("Should unselect")
+        unselect(event, state, emit, globalState)
+      } 
+    },
     interact: (event: any, state: Record<string, any>, emit: Function) => {
       state.el = document.getElementById(state.id);
       state.initialState = {
@@ -130,7 +140,11 @@ export const building: IMachine = {
         scale: { ...state.el.object3D.scale },
         rotation: { ...state.el.object3D.rotation }
       };
-      state.el.setAttribute("material", { transparent: true, opacity: 0.7 });
+      const selectionIndicator = document.createElement(state.el.tagName.toLowerCase())
+      selectionIndicator.setAttribute("material", { emissive: "#0ff", wireframe: true })
+      // selectionIndicator.object3D.scale.set(1.05, 1.05, 1.05)
+      selectionIndicator.classList.add("selection-indicator")
+      state.el.appendChild(selectionIndicator)
       const {
         face: {
           normal: { x, y, z },
@@ -199,6 +213,7 @@ export const building: IMachine = {
       emit("modifiedBuilding:builtins", { el: state.el });
     },
     setCurrentState: (event: any, state: Record<string, any>) => {
+      console.log("Going to set the current state I guess")
       if (!state.initialState) {
         return
       }
@@ -278,7 +293,7 @@ export const building: IMachine = {
         state.initialState.rotation._y,
         state.initialState.rotation._z,
       )
-      state.el.setAttribute("material", { transparent: true, opacity: 1 });
+      state.el.querySelector(".selection-indicator")?.remove()
       emit("modifiedBuilding:builtins", { el: state.el });
     },
     doneBuilding: (
@@ -295,6 +310,7 @@ export const building: IMachine = {
         const oldSize = oldX * oldY * oldZ
         const energyCost = Math.ceil(Math.abs(newSize - oldSize) / 4)
         deductEnergy(energyCost);
+        state.el.querySelector(".selection-indicator")?.remove()
         emit("consumedResources:builtins", { energy: energyCost })
         // Silently handle consuming resources for now - I'm lazy
         if (state.el.hasAttribute("resource")) {
@@ -328,7 +344,7 @@ export const building: IMachine = {
         );
         handleOverdraw(err, emit, event)
       }
-      state.el.setAttribute("material", { transparent: true, opacity: 1 });
+      state.el.querySelector(".selection-indicator")?.remove()
       emit("modifiedBuilding:builtins", { el: state.el });
     },
   },

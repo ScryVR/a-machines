@@ -34,5 +34,6 @@
   },
   "dependencies": {
     "mafiu": "^1.0.8"
-  }
+  },
+  "peerDependencies": {}
 }

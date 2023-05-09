@@ -1,3 +1,4 @@
+import { select, unselect } from "./handleMultiselect";
 import { deductEnergy, deductResources, } from "./transactionHandlers/deductEnergy";
 export const buttonMachine = {
     name: "button",
@@ -111,6 +112,16 @@ export const building = {
         },
     },
     listeners: {
+        multiselect: (event, state, emit, globalState) => {
+            if (globalState.actionArg === "select") {
+                console.log("Should select");
+                select(event, state, emit, globalState);
+            }
+            else if (globalState.actionArg === "unselect") {
+                console.log("Should unselect");
+                unselect(event, state, emit, globalState);
+            }
+        },
         interact: (event, state, emit) => {
             state.el = document.getElementById(state.id);
             state.initialState = {
@@ -118,7 +129,11 @@ export const building = {
                 scale: Object.assign({}, state.el.object3D.scale),
                 rotation: Object.assign({}, state.el.object3D.rotation)
             };
-            state.el.setAttribute("material", { transparent: true, opacity: 0.7 });
+            const selectionIndicator = document.createElement(state.el.tagName.toLowerCase());
+            selectionIndicator.setAttribute("material", { emissive: "#0ff", wireframe: true });
+            // selectionIndicator.object3D.scale.set(1.05, 1.05, 1.05)
+            selectionIndicator.classList.add("selection-indicator");
+            state.el.appendChild(selectionIndicator);
             const { face: { normal: { x, y, z }, }, uv, } = event.detail.intersection;
             // Update state to indicate how to respond to different drags
             state.dragProperties = {
@@ -183,6 +198,7 @@ export const building = {
             emit("modifiedBuilding:builtins", { el: state.el });
         },
         setCurrentState: (event, state) => {
+            console.log("Going to set the current state I guess");
             if (!state.initialState) {
                 return;
             }
@@ -237,13 +253,15 @@ export const building = {
         },
         build: createNewBuilding,
         cancelBuilding: (event, state, emit) => {
+            var _a;
             state.el.object3D.position.set(state.initialState.position.x, state.initialState.position.y, state.initialState.position.z);
             state.el.object3D.scale.set(state.initialState.scale.x, state.initialState.scale.y, state.initialState.scale.z);
             state.el.object3D.rotation.set(state.initialState.rotation._x, state.initialState.rotation._y, state.initialState.rotation._z);
-            state.el.setAttribute("material", { transparent: true, opacity: 1 });
+            (_a = state.el.querySelector(".selection-indicator")) === null || _a === void 0 ? void 0 : _a.remove();
             emit("modifiedBuilding:builtins", { el: state.el });
         },
         doneBuilding: (event, state, emit, globalState) => {
+            var _a, _b;
             try {
                 // Handle energy costs
                 const { x, y, z } = state.el.object3D.scale;
@@ -252,6 +270,7 @@ export const building = {
                 const oldSize = oldX * oldY * oldZ;
                 const energyCost = Math.ceil(Math.abs(newSize - oldSize) / 4);
                 deductEnergy(energyCost);
+                (_a = state.el.querySelector(".selection-indicator")) === null || _a === void 0 ? void 0 : _a.remove();
                 emit("consumedResources:builtins", { energy: energyCost });
                 // Silently handle consuming resources for now - I'm lazy
                 if (state.el.hasAttribute("resource")) {
@@ -278,7 +297,7 @@ export const building = {
                 state.el.object3D.scale.set(state.initialState.scale.x, state.initialState.scale.y, state.initialState.scale.z);
                 handleOverdraw(err, emit, event);
             }
-            state.el.setAttribute("material", { transparent: true, opacity: 1 });
+            (_b = state.el.querySelector(".selection-indicator")) === null || _b === void 0 ? void 0 : _b.remove();
             emit("modifiedBuilding:builtins", { el: state.el });
         },
     },

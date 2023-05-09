@@ -88,7 +88,6 @@ function createDomTouchListener(event: any) {
       touchListener.style.visibility = "hidden";
     });
     touchListener.querySelector("#rotate-btn").addEventListener("click", (event: any) => {
-      console.log("Okay, doing the thing")
       event.target.classList.toggle("active")
       const selectedProperty = event.target.classList.contains("active") ? "rotation" : "scale"
       sendEventToTarget(dragTargetId, "setDragProperty", { selectedProperty })
@@ -103,16 +102,21 @@ function createDomTouchListener(event: any) {
     });
   }
   let prevTouch: any = null;
+  let touchStartEvt: any = null
+  let isClicking = true
   touchListener.addEventListener(
     "touchstart",
     (event) => {
       prevTouch = event.touches[0];
+      touchStartEvt = event
+      isClicking = true
     },
     { passive: true }
   );
   touchListener.addEventListener(
     "touchmove",
     (touchEvent) => {
+      isClicking = false
       const delta = {
         x: touchEvent.touches[0].clientX - prevTouch.clientX,
         y: touchEvent.touches[0].clientY - prevTouch.clientY,
@@ -127,6 +131,23 @@ function createDomTouchListener(event: any) {
     },
     { passive: true }
   );
+  touchListener.addEventListener(
+    "touchend",
+    (touchEvent) => {
+      if (!isClicking) {
+        return
+      }
+      console.log("Clicky time???")
+      // @ts-ignore
+      const cursor = document.querySelector("[cursor]").components.cursor
+      if (cursor) {
+        console.log("should do the thing")
+        cursor.onCursorDown.call(cursor, touchStartEvt)
+        cursor.twoWayEmit("click")
+      }
+      // sendEventToTarget(dragTargetId, "interact", { touch: touchEvent.touches[0] })
+    }
+  )
   scene.getAttribute("webxr").overlayElement.appendChild(touchListener);
 }
 
