@@ -129,7 +129,7 @@ function getGroupProxy(groupSelector: string, globalState: Record<string, any>) 
   // @ts-ignore
   centroid.y -= root.object3D.position.y 
   
-  if (group.length > 1 || Math) {
+  if (group.length > 1) {
     const groupWrapperBox: any = document.createElement("a-box")
     groupWrapperBox.setAttribute("material", { wireframe: true, emissive: "#faf", color: "#faf" })
     groupWrapperBox.object3D.scale.set(
@@ -143,12 +143,9 @@ function getGroupProxy(groupSelector: string, globalState: Record<string, any>) 
   centroidWrapperEl.object3D.position.set(centroid.x, centroid.y, centroid.z);
   // Create proxy children and append them to wrapper
   group.forEach((el: any) => {
-    const proxyEl: any = document.createElement("a-box")
-    proxyEl.setAttribute("material", { wireframe: true, color: "red" })
+    const proxyEl: any = document.createElement("a-entity")
     proxyEl.classList.add("proxy")
     proxyEl.original = el
-    // const proxyEl: any = document.createElement(el.tagName.toLowerCase())
-    // el.setAttribute("visible", false)
     // I'm making some assumptions here about the DOM structure.
     // This code won't work as expected if the group's parents have a non-zero rotation. This should be fine, at least for now.
     const  { scale, rotation } = el.object3D
