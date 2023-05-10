@@ -1,5 +1,5 @@
 import { IMachine } from "./a-machine";
-import { select, unselect } from "./handleMultiselect";
+import { select, transformMultiple, translateMultiple, unselect } from "./handleMultiselect";
 import {
   deductEnergy,
   deductResources,
@@ -124,92 +124,63 @@ export const building: IMachine = {
     },
   },
   listeners: {
-    multiselect: (event: any, state: Record<string, any>, emit: Function, globalState: Record<string, any>) => {
-      if (globalState.actionArg === "select") {
-        console.log("Should select")
-        select(event, state, emit, globalState)
-      } else if (globalState.actionArg === "unselect") {
-        console.log("Should unselect")
-        unselect(event, state, emit, globalState)
-      } 
-    },
-    interact: (event: any, state: Record<string, any>, emit: Function) => {
-      state.el = document.getElementById(state.id);
-      state.initialState = {
-        position: { ...state.el.object3D.position },
-        scale: { ...state.el.object3D.scale },
-        rotation: { ...state.el.object3D.rotation }
-      };
-      const selectionIndicator = document.createElement(state.el.tagName.toLowerCase())
-      selectionIndicator.setAttribute("material", { emissive: "#0ff", wireframe: true })
-      // selectionIndicator.object3D.scale.set(1.05, 1.05, 1.05)
-      selectionIndicator.classList.add("selection-indicator")
-      state.el.appendChild(selectionIndicator)
-      const {
-        face: {
-          normal: { x, y, z },
-        },
-        uv,
-      } = event.detail.intersection;
+    interact: (event: any, state: Record<string, any>, emit: Function, globalState: Record<string, any>) => {
+      state.el = state.el || document.getElementById(state.id);
+      const isBeingSelected = !state.el.hasAttribute("data-current-group")
+      const isOnlySelection = !isBeingSelected && document.querySelectorAll("[data-current-group]").length === 1
+      if (isBeingSelected || isOnlySelection) {
+        // Mark element as selected
+        state.el.querySelector(".selection-indicator")?.remove()
+        const selectionIndicator = document.createElement(state.el.tagName.toLowerCase())
+        selectionIndicator.setAttribute("material", { emissive: "#0ff", wireframe: true, color: "#0ff" })
+        selectionIndicator.classList.add("selection-indicator")
+        state.el.appendChild(selectionIndicator)
 
-      // Update state to indicate how to respond to different drags
-      state.dragProperties = {
-        y: {
-          resizeMultiplier: uv.y < 0.5 ? -1 : 1,
-          offsetMultiplier: 1,
-          attribute: "y",
-        },
-        x: {
-          resizeMultiplier: uv.x < 0.5 ? -1 : 1,
-          offsetMultiplier: -x || z,
-          attribute: Math.abs(z) > Math.abs(x) ? "x" : "z",
-        },
-      };
-      emit("activateTouchListener:builtins", { id: state.id });
+        // Update selection state
+        select(event, state, emit, globalState)
+        
+        // Initialize state for handling transformations
+        state.initialState = {
+          position: { ...state.el.object3D.position },
+          scale: { ...state.el.object3D.scale },
+          rotation: { ...state.el.object3D.rotation }
+        };
+        const {
+          face: {
+            normal: { x, y, z },
+          },
+          uv,
+        } = event.detail.intersection;
+  
+        // Update state to indicate how to respond to different drags
+        state.dragProperties = {
+          y: {
+            resizeMultiplier: uv.y < 0.5 ? -1 : 1,
+            offsetMultiplier: 1,
+            attribute: "y",
+          },
+          x: {
+            resizeMultiplier: uv.x < 0.5 ? -1 : 1,
+            offsetMultiplier: -x || z,
+            attribute: Math.abs(z) > Math.abs(x) ? "x" : "z",
+          },
+        };
+        emit("activateTouchListener:builtins", { id: state.id });
+      } else {
+        unselect(event, state, emit, globalState)
+        emit("modifiedBuilding:builtins", { el: state.el });
+      }
     },
     set_material: setMaterial,
     setDragProperty: (event: any, state: Record<string, any>) => {
       state.selectedProperty = event.detail.selectedProperty
     },
-    drag: (event: any, state: Record<string, any>, emit: Function) => {
-      const { x, y } = event.detail.delta;
-      const property = state.selectedProperty || "scale"
-      if (Math.abs(x) > Math.abs(y)) {
-        let xAttribute = state.dragProperties.x.attribute
-        if (property === "rotation") {
-          xAttribute = state.dragProperties.y.attribute
-        }
-        const { resizeMultiplier, offsetMultiplier } = state.dragProperties.x;
-        state.el.object3D[property][xAttribute] +=
-          (x / 100) * resizeMultiplier;
-        if (property === "scale") {
-          state.el.object3D.position[state.dragProperties.x.attribute] +=
-            (x / 200) * offsetMultiplier;
-        }
-      } else {
-        let yAttribute = state.dragProperties.y.attribute
-        if (property === "rotation") {
-          yAttribute = state.dragProperties.x.attribute
-        }
-        const { resizeMultiplier, offsetMultiplier } = state.dragProperties.y;
-        state.el.object3D[property][yAttribute] -=
-          (y / 100) * resizeMultiplier;
-        if (property === "scale") {
-          state.el.object3D.position[state.dragProperties.y.attribute] -=
-            (y / 200) * offsetMultiplier;
-        }
-      }
+    drag: (event: any, state: Record<string, any>, emit: Function, globalState: Record<string, any>) => {
+      transformMultiple(event, state, globalState)
       emit("modifiedBuilding:builtins", { el: state.el });
     },
-    twoFingerDrag: (event: any, state: Record<string, any>, emit: Function) => {
-      const { x, y } = event.detail.delta;
-      if (Math.abs(x) > Math.abs(y)) {
-        const { offsetMultiplier } = state.dragProperties.x;
-        state.el.object3D.position[state.dragProperties.x.attribute] +=
-          (x / 100) * offsetMultiplier;
-      } else {
-        state.el.object3D.position[state.dragProperties.y.attribute] -= y / 100;
-      }
+    twoFingerDrag: (event: any, state: Record<string, any>, emit: Function, globalState: Record<string, any>) => {
+      translateMultiple(event, state, globalState)
       emit("modifiedBuilding:builtins", { el: state.el });
     },
     setCurrentState: (event: any, state: Record<string, any>) => {

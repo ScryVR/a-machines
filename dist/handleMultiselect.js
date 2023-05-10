@@ -3,41 +3,89 @@
  * Therefore, I'm splitting out into its own function.
  * I should probably do this for all the other default machine handlers tbh
  */
-export function scaleMultiple(event, state, emit) {
-    if (!state.group) {
-        return;
+export function transformMultiple(event, state, globalState) {
+    // Transform the group proxy parent
+    const { x, y } = event.detail.delta;
+    const property = state.selectedProperty || "scale";
+    if (Math.abs(x) > Math.abs(y)) {
+        let xAttribute = state.dragProperties.x.attribute;
+        if (property === "rotation") {
+            xAttribute = state.dragProperties.y.attribute;
+        }
+        const { resizeMultiplier, offsetMultiplier } = state.dragProperties.x;
+        globalState.groupProxy.object3D[property][xAttribute] +=
+            (x / 100) * resizeMultiplier;
+        if (property === "scale") {
+            globalState.groupProxy.object3D.position[state.dragProperties.x.attribute] +=
+                (x / 200) * offsetMultiplier;
+        }
     }
-    console.log("Should scale the group proxy parent");
+    else {
+        let yAttribute = state.dragProperties.y.attribute;
+        if (property === "rotation") {
+            yAttribute = state.dragProperties.x.attribute;
+        }
+        const { resizeMultiplier, offsetMultiplier } = state.dragProperties.y;
+        globalState.groupProxy.object3D[property][yAttribute] -=
+            (y / 100) * resizeMultiplier;
+        if (property === "scale") {
+            globalState.groupProxy.object3D.position[state.dragProperties.y.attribute] -=
+                (y / 200) * offsetMultiplier;
+        }
+    }
+    // Iterate over the proxy children and transform the original elements accordingly
+    // @ts-ignore
+    let quat = new THREE.Quaternion();
+    const root = document.querySelector(globalState.rootSelector);
+    // @ts-ignore
+    let rootWorldPos = new THREE.Vector3();
+    root.object3D.getWorldPosition(rootWorldPos);
+    globalState.groupProxy.querySelectorAll(".proxy").forEach((proxyEl) => {
+        proxyEl.object3D.getWorldPosition(proxyEl.original.object3D.position);
+        proxyEl.original.object3D.position.y -= rootWorldPos.y;
+        proxyEl.object3D.getWorldScale(proxyEl.original.object3D.scale);
+        if (property === "rotation") {
+            proxyEl.object3D.getWorldQuaternion(quat);
+            proxyEl.original.object3D.setRotationFromQuaternion(quat);
+        }
+    });
 }
-export function rotateMultiple() {
-    // Rotate the proxy group wrapper
-    // Update the original group elements' rotations
-}
-export function translateMultiple() {
+export function translateMultiple(event, state, globalState) {
     // Iterate over all the group elements and apply the translation
+    const { x, y } = event.detail.delta;
+    if (Math.abs(x) > Math.abs(y)) {
+        const { offsetMultiplier } = state.dragProperties.x;
+        globalState.groupProxy.object3D.position[state.dragProperties.x.attribute] +=
+            (x / 100) * offsetMultiplier;
+    }
+    else {
+        globalState.groupProxy.object3D.position[state.dragProperties.y.attribute] -= y / 100;
+    }
+    const root = document.querySelector(globalState.rootSelector);
+    // @ts-ignore
+    let rootWorldPos = new THREE.Vector3();
+    root.object3D.getWorldPosition(rootWorldPos);
+    globalState.groupProxy.querySelectorAll(".proxy").forEach((proxyEl) => {
+        // The original's new position is the proxy's world position minus the proxy parent's world position
+        proxyEl.object3D.getWorldPosition(proxyEl.original.object3D.position);
+        proxyEl.original.object3D.position.y -= rootWorldPos.y;
+    });
 }
 export function select(event, state, emit, globalState) {
     var _a;
-    state.el = state.el || document.getElementById(state.id);
-    let groupId = globalState.selectedGroup;
-    if (!groupId) {
-        // There's an edge case here where the user selects an element that is already in a different group
-        // @ts-ignore
-        groupId = state.el.getAttribute("groupId") || crypto.randomUUID();
+    state.el.setAttribute("data-current-group", "true");
+    if (state.el.hasAttribute("groupId")) {
+        const groupMates = Array.from(document.querySelectorAll(`[groupId=${state.el.getAttribute("groupId")}]`)).map(el => el.getAttribute("id"));
+        globalState.currentGroup = globalState.currentGroup.concat(groupMates);
     }
-    state.el.setAttribute("groupId", groupId);
-    globalState.selectedGroup = groupId;
     (_a = globalState.groupProxy) === null || _a === void 0 ? void 0 : _a.remove();
-    globalState.groupProxy = getGroupProxy(groupId, globalState);
+    globalState.groupProxy = getGroupProxy("[data-current-group]", globalState);
 }
 export function unselect(event, state, emit, globalState) {
     var _a;
-    if (!globalState.selectedGroup) {
-        return;
-    }
-    document.getElementById(state.id).removeAttribute("groupId");
+    document.getElementById(state.id).removeAttribute("data-current-group");
     (_a = globalState.groupProxy) === null || _a === void 0 ? void 0 : _a.remove();
-    globalState.groupProxy = getGroupProxy(globalState.selectedGroup, globalState);
+    globalState.groupProxy = getGroupProxy("[data-current-group]", globalState);
 }
 /**
  * This function receives a reference to a group of scene elements.
@@ -46,10 +94,9 @@ export function unselect(event, state, emit, globalState) {
  * This wrapper element can be moved, rotated, scaled, etc.
  * Any edits to the proxy elements can be propagated to the originals.
  */
-function getGroupProxy(groupId, globalState) {
+function getGroupProxy(groupSelector, globalState) {
     // Get all group elements
-    const group = Array.from(document.querySelectorAll(`[groupId="${groupId}"]`));
-    console.log("The group has: ", group);
+    const group = Array.from(document.querySelectorAll(groupSelector));
     // Create wrapper and position at the centroid
     const centroidWrapperEl = document.createElement("a-entity");
     // Compute the centroid of all the group elements.
@@ -71,17 +118,22 @@ function getGroupProxy(groupId, globalState) {
     centroid.x /= group.length;
     centroid.y /= group.length;
     centroid.z /= group.length;
+    const root = document.querySelector(globalState.rootSelector);
     // @ts-ignore
-    centroid.y -= document.querySelector(globalState.rootSelector).object3D.position.y;
-    const groupWrapperBox = document.createElement("a-box");
-    groupWrapperBox.setAttribute("material", { wireframe: true, emissive: "#0ff" });
-    groupWrapperBox.object3D.scale.set(centroid.maxes.x - centroid.mins.x + 0.2, centroid.maxes.y - centroid.mins.y + 0.2, centroid.maxes.z - centroid.mins.z + 0.2);
-    centroidWrapperEl.appendChild(groupWrapperBox);
+    centroid.y -= root.object3D.position.y;
+    if (group.length > 1 || Math) {
+        const groupWrapperBox = document.createElement("a-box");
+        groupWrapperBox.setAttribute("material", { wireframe: true, emissive: "#faf", color: "#faf" });
+        groupWrapperBox.object3D.scale.set(centroid.maxes.x - centroid.mins.x, centroid.maxes.y - centroid.mins.y, centroid.maxes.z - centroid.mins.z);
+        centroidWrapperEl.appendChild(groupWrapperBox);
+    }
     centroidWrapperEl.object3D.position.set(centroid.x, centroid.y, centroid.z);
-    console.log("centroid?", centroid);
     // Create proxy children and append them to wrapper
     group.forEach((el) => {
-        const proxyEl = document.createElement("a-entity");
+        const proxyEl = document.createElement("a-box");
+        proxyEl.setAttribute("material", { wireframe: true, color: "red" });
+        proxyEl.classList.add("proxy");
+        proxyEl.original = el;
         // const proxyEl: any = document.createElement(el.tagName.toLowerCase())
         // el.setAttribute("visible", false)
         // I'm making some assumptions here about the DOM structure.
@@ -91,6 +143,7 @@ function getGroupProxy(groupId, globalState) {
         proxyEl.object3D.rotation.set(rotation.x, rotation.y, rotation.z);
         el.object3D.getWorldPosition(proxyEl.object3D.position);
         proxyEl.object3D.position.sub(centroid);
+        proxyEl.object3D.position.y -= root.object3D.position.y;
         // const attributes = ["material", "color", "resource", "light"]
         // attributes.forEach(attr => {
         //   proxyEl.setAttribute(attr, el.getAttribute(attr))
@@ -98,6 +151,5 @@ function getGroupProxy(groupId, globalState) {
         centroidWrapperEl.appendChild(proxyEl);
     });
     document.querySelector(globalState.rootSelector).appendChild(centroidWrapperEl);
-    console.log("Hmmm", centroidWrapperEl);
     return centroidWrapperEl;
 }

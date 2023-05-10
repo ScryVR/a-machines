@@ -1,6 +1,7 @@
 export const machineState = {
     selectedAction: "interact",
     rootSelector: "a-scene",
+    targets: [],
     // Todo: replace with class instance
     user: {
         energy: 100,

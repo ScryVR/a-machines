@@ -1,3 +1,5 @@
+import { machineState } from "./machineState";
+
 export interface IBuiltin {
   name: string;
   listener: Function;
@@ -49,15 +51,18 @@ export const activateTouchListener: IBuiltin = {
 
 let dragTargetId: string = "";
 function createDomTouchListener(event: any) {
-  dragTargetId = event.detail.id;
   let touchListener: HTMLElement = document.querySelector(
     ".a-machine-touch-listener"
-  );
+    );
   if (touchListener) {
+    if (touchListener.style.visibility !== "hidden") {
+      sendEventToTarget(dragTargetId, "multiselect", { id: event.detail.id })
+    }
     touchListener.style.pointerEvents = "auto";
     touchListener.style.visibility = "visible";
     return;
   }
+  dragTargetId = event.detail.id;
   const scene: any = document.querySelector("a-scene");
   if (!scene.getAttribute("webxr")?.overlayElement) {
     console.warn(
@@ -83,7 +88,12 @@ function createDomTouchListener(event: any) {
       </div>
       `;
     touchListener.querySelector("#done-btn").addEventListener("click", () => {
-      sendEventToTarget(dragTargetId, "doneBuilding", {});
+      machineState.groupProxy?.setAttribute("visible", false)
+      document.querySelectorAll("[data-current-group]").forEach((el) => {
+        el.removeAttribute("data-current-group")
+        sendEventToTarget(el.getAttribute("id"), "doneBuilding", {});
+      })
+      // sendEventToTarget(dragTargetId, "doneBuilding", {});
       touchListener.style.pointerEvents = "none";
       touchListener.style.visibility = "hidden";
     });
@@ -96,7 +106,11 @@ function createDomTouchListener(event: any) {
       sendEventToTarget(dragTargetId, "gridAlign", {})
     })
     touchListener.querySelector("#cancel-btn").addEventListener("click", () => {
-      sendEventToTarget(dragTargetId, "cancelBuilding", {});
+      machineState.groupProxy?.setAttribute("visible", false)
+      document.querySelectorAll("[data-current-group]").forEach((el) => {
+        el.removeAttribute("data-current-group")
+        sendEventToTarget(el.getAttribute("id"), "cancelBuilding", {});
+      })
       touchListener.style.pointerEvents = "none";
       touchListener.style.visibility = "hidden";
     });
@@ -133,19 +147,16 @@ function createDomTouchListener(event: any) {
   );
   touchListener.addEventListener(
     "touchend",
-    (touchEvent) => {
+    () => {
       if (!isClicking) {
         return
       }
-      console.log("Clicky time???")
       // @ts-ignore
       const cursor = document.querySelector("[cursor]").components.cursor
       if (cursor) {
-        console.log("should do the thing")
         cursor.onCursorDown.call(cursor, touchStartEvt)
         cursor.twoWayEmit("click")
       }
-      // sendEventToTarget(dragTargetId, "interact", { touch: touchEvent.touches[0] })
     }
   )
   scene.getAttribute("webxr").overlayElement.appendChild(touchListener);

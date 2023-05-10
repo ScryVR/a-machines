@@ -1,3 +1,4 @@
+import { machineState } from "./machineState";
 export const promptForText = {
     name: "promptForText",
     listener: promptForTextListener,
@@ -40,13 +41,16 @@ export const activateTouchListener = {
 let dragTargetId = "";
 function createDomTouchListener(event) {
     var _a;
-    dragTargetId = event.detail.id;
     let touchListener = document.querySelector(".a-machine-touch-listener");
     if (touchListener) {
+        if (touchListener.style.visibility !== "hidden") {
+            sendEventToTarget(dragTargetId, "multiselect", { id: event.detail.id });
+        }
         touchListener.style.pointerEvents = "auto";
         touchListener.style.visibility = "visible";
         return;
     }
+    dragTargetId = event.detail.id;
     const scene = document.querySelector("a-scene");
     if (!((_a = scene.getAttribute("webxr")) === null || _a === void 0 ? void 0 : _a.overlayElement)) {
         console.warn("a-machine could not prompt for text - no webxr.overlayElement defined on a-scene");
@@ -69,7 +73,13 @@ function createDomTouchListener(event) {
       </div>
       `;
         touchListener.querySelector("#done-btn").addEventListener("click", () => {
-            sendEventToTarget(dragTargetId, "doneBuilding", {});
+            var _a;
+            (_a = machineState.groupProxy) === null || _a === void 0 ? void 0 : _a.setAttribute("visible", false);
+            document.querySelectorAll("[data-current-group]").forEach((el) => {
+                el.removeAttribute("data-current-group");
+                sendEventToTarget(el.getAttribute("id"), "doneBuilding", {});
+            });
+            // sendEventToTarget(dragTargetId, "doneBuilding", {});
             touchListener.style.pointerEvents = "none";
             touchListener.style.visibility = "hidden";
         });
@@ -82,7 +92,12 @@ function createDomTouchListener(event) {
             sendEventToTarget(dragTargetId, "gridAlign", {});
         });
         touchListener.querySelector("#cancel-btn").addEventListener("click", () => {
-            sendEventToTarget(dragTargetId, "cancelBuilding", {});
+            var _a;
+            (_a = machineState.groupProxy) === null || _a === void 0 ? void 0 : _a.setAttribute("visible", false);
+            document.querySelectorAll("[data-current-group]").forEach((el) => {
+                el.removeAttribute("data-current-group");
+                sendEventToTarget(el.getAttribute("id"), "cancelBuilding", {});
+            });
             touchListener.style.pointerEvents = "none";
             touchListener.style.visibility = "hidden";
         });
@@ -109,19 +124,16 @@ function createDomTouchListener(event) {
         }
         prevTouch = touchEvent.touches[0];
     }, { passive: true });
-    touchListener.addEventListener("touchend", (touchEvent) => {
+    touchListener.addEventListener("touchend", () => {
         if (!isClicking) {
             return;
         }
-        console.log("Clicky time???");
         // @ts-ignore
         const cursor = document.querySelector("[cursor]").components.cursor;
         if (cursor) {
-            console.log("should do the thing");
             cursor.onCursorDown.call(cursor, touchStartEvt);
             cursor.twoWayEmit("click");
         }
-        // sendEventToTarget(dragTargetId, "interact", { touch: touchEvent.touches[0] })
     });
     scene.getAttribute("webxr").overlayElement.appendChild(touchListener);
 }

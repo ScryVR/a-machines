@@ -1,4 +1,4 @@
-import { select, unselect } from "./handleMultiselect";
+import { select, transformMultiple, translateMultiple, unselect } from "./handleMultiselect";
 import { deductEnergy, deductResources, } from "./transactionHandlers/deductEnergy";
 export const buttonMachine = {
     name: "button",
@@ -112,89 +112,57 @@ export const building = {
         },
     },
     listeners: {
-        multiselect: (event, state, emit, globalState) => {
-            if (globalState.actionArg === "select") {
-                console.log("Should select");
+        interact: (event, state, emit, globalState) => {
+            var _a;
+            state.el = state.el || document.getElementById(state.id);
+            const isBeingSelected = !state.el.hasAttribute("data-current-group");
+            const isOnlySelection = !isBeingSelected && document.querySelectorAll("[data-current-group]").length === 1;
+            if (isBeingSelected || isOnlySelection) {
+                // Mark element as selected
+                (_a = state.el.querySelector(".selection-indicator")) === null || _a === void 0 ? void 0 : _a.remove();
+                const selectionIndicator = document.createElement(state.el.tagName.toLowerCase());
+                selectionIndicator.setAttribute("material", { emissive: "#0ff", wireframe: true, color: "#0ff" });
+                selectionIndicator.classList.add("selection-indicator");
+                state.el.appendChild(selectionIndicator);
+                // Update selection state
                 select(event, state, emit, globalState);
+                // Initialize state for handling transformations
+                state.initialState = {
+                    position: Object.assign({}, state.el.object3D.position),
+                    scale: Object.assign({}, state.el.object3D.scale),
+                    rotation: Object.assign({}, state.el.object3D.rotation)
+                };
+                const { face: { normal: { x, y, z }, }, uv, } = event.detail.intersection;
+                // Update state to indicate how to respond to different drags
+                state.dragProperties = {
+                    y: {
+                        resizeMultiplier: uv.y < 0.5 ? -1 : 1,
+                        offsetMultiplier: 1,
+                        attribute: "y",
+                    },
+                    x: {
+                        resizeMultiplier: uv.x < 0.5 ? -1 : 1,
+                        offsetMultiplier: -x || z,
+                        attribute: Math.abs(z) > Math.abs(x) ? "x" : "z",
+                    },
+                };
+                emit("activateTouchListener:builtins", { id: state.id });
             }
-            else if (globalState.actionArg === "unselect") {
-                console.log("Should unselect");
+            else {
                 unselect(event, state, emit, globalState);
+                emit("modifiedBuilding:builtins", { el: state.el });
             }
-        },
-        interact: (event, state, emit) => {
-            state.el = document.getElementById(state.id);
-            state.initialState = {
-                position: Object.assign({}, state.el.object3D.position),
-                scale: Object.assign({}, state.el.object3D.scale),
-                rotation: Object.assign({}, state.el.object3D.rotation)
-            };
-            const selectionIndicator = document.createElement(state.el.tagName.toLowerCase());
-            selectionIndicator.setAttribute("material", { emissive: "#0ff", wireframe: true });
-            // selectionIndicator.object3D.scale.set(1.05, 1.05, 1.05)
-            selectionIndicator.classList.add("selection-indicator");
-            state.el.appendChild(selectionIndicator);
-            const { face: { normal: { x, y, z }, }, uv, } = event.detail.intersection;
-            // Update state to indicate how to respond to different drags
-            state.dragProperties = {
-                y: {
-                    resizeMultiplier: uv.y < 0.5 ? -1 : 1,
-                    offsetMultiplier: 1,
-                    attribute: "y",
-                },
-                x: {
-                    resizeMultiplier: uv.x < 0.5 ? -1 : 1,
-                    offsetMultiplier: -x || z,
-                    attribute: Math.abs(z) > Math.abs(x) ? "x" : "z",
-                },
-            };
-            emit("activateTouchListener:builtins", { id: state.id });
         },
         set_material: setMaterial,
         setDragProperty: (event, state) => {
             state.selectedProperty = event.detail.selectedProperty;
         },
-        drag: (event, state, emit) => {
-            const { x, y } = event.detail.delta;
-            const property = state.selectedProperty || "scale";
-            if (Math.abs(x) > Math.abs(y)) {
-                let xAttribute = state.dragProperties.x.attribute;
-                if (property === "rotation") {
-                    xAttribute = state.dragProperties.y.attribute;
-                }
-                const { resizeMultiplier, offsetMultiplier } = state.dragProperties.x;
-                state.el.object3D[property][xAttribute] +=
-                    (x / 100) * resizeMultiplier;
-                if (property === "scale") {
-                    state.el.object3D.position[state.dragProperties.x.attribute] +=
-                        (x / 200) * offsetMultiplier;
-                }
-            }
-            else {
-                let yAttribute = state.dragProperties.y.attribute;
-                if (property === "rotation") {
-                    yAttribute = state.dragProperties.x.attribute;
-                }
-                const { resizeMultiplier, offsetMultiplier } = state.dragProperties.y;
-                state.el.object3D[property][yAttribute] -=
-                    (y / 100) * resizeMultiplier;
-                if (property === "scale") {
-                    state.el.object3D.position[state.dragProperties.y.attribute] -=
-                        (y / 200) * offsetMultiplier;
-                }
-            }
+        drag: (event, state, emit, globalState) => {
+            transformMultiple(event, state, globalState);
             emit("modifiedBuilding:builtins", { el: state.el });
         },
-        twoFingerDrag: (event, state, emit) => {
-            const { x, y } = event.detail.delta;
-            if (Math.abs(x) > Math.abs(y)) {
-                const { offsetMultiplier } = state.dragProperties.x;
-                state.el.object3D.position[state.dragProperties.x.attribute] +=
-                    (x / 100) * offsetMultiplier;
-            }
-            else {
-                state.el.object3D.position[state.dragProperties.y.attribute] -= y / 100;
-            }
+        twoFingerDrag: (event, state, emit, globalState) => {
+            translateMultiple(event, state, globalState);
             emit("modifiedBuilding:builtins", { el: state.el });
         },
         setCurrentState: (event, state) => {
