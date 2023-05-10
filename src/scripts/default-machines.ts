@@ -138,7 +138,7 @@ export const building: IMachine = {
 
         // Update selection state
         select(event, state, emit, globalState)
-        
+
         // Initialize state for handling transformations
         state.initialState = {
           position: { ...state.el.object3D.position },

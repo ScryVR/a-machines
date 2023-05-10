@@ -51,18 +51,15 @@ export const activateTouchListener: IBuiltin = {
 
 let dragTargetId: string = "";
 function createDomTouchListener(event: any) {
+  dragTargetId = event.detail.id;
   let touchListener: HTMLElement = document.querySelector(
     ".a-machine-touch-listener"
     );
   if (touchListener) {
-    if (touchListener.style.visibility !== "hidden") {
-      sendEventToTarget(dragTargetId, "multiselect", { id: event.detail.id })
-    }
     touchListener.style.pointerEvents = "auto";
     touchListener.style.visibility = "visible";
     return;
   }
-  dragTargetId = event.detail.id;
   const scene: any = document.querySelector("a-scene");
   if (!scene.getAttribute("webxr")?.overlayElement) {
     console.warn(
@@ -84,6 +81,7 @@ function createDomTouchListener(event: any) {
         <button id='done-btn'>Done</button>
         <button id='rotate-btn'>Rotate</button>
         <button id='grid-btn'>Grid snap</button>
+        <button id='group-btn' style="display: none;">Group</button>
         <button id='cancel-btn'>Cancel</button>
       </div>
       `;
@@ -155,6 +153,8 @@ function createDomTouchListener(event: any) {
       const cursor = document.querySelector("[cursor]").components.cursor
       if (cursor) {
         cursor.onCursorDown.call(cursor, touchStartEvt)
+        const groupBtn: HTMLButtonElement = document.querySelector("#group-btn")
+        groupBtn.style.display = "inline-block"
         cursor.twoWayEmit("click")
       }
     }
