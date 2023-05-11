@@ -74,18 +74,29 @@ export function translateMultiple(event, state, globalState) {
 export function select(event, state, emit, globalState) {
     var _a;
     state.el.setAttribute("data-current-group", "true");
+    state.el.removeAttribute("data-unselected", "true");
     if (state.el.hasAttribute("groupId")) {
-        const groupMates = Array.from(document.querySelectorAll(`[groupId=${state.el.getAttribute("groupId")}]`)).map(el => el.getAttribute("id"));
-        globalState.currentGroup = globalState.currentGroup.concat(groupMates);
+        const groupMates = document.querySelectorAll(`[groupId=${state.el.getAttribute("groupId")}]`);
+        groupMates.forEach((el) => {
+            el.setAttribute("data-current-group", "true");
+            el.components["a-machine"].state.initialState = {
+                position: Object.assign({}, el.object3D.position),
+                scale: Object.assign({}, el.object3D.scale),
+                rotation: Object.assign({}, el.object3D.rotation)
+            };
+        });
     }
     (_a = globalState.groupProxy) === null || _a === void 0 ? void 0 : _a.remove();
-    globalState.groupProxy = getGroupProxy("[data-current-group]", globalState);
+    globalState.groupProxy = getGroupProxy("[data-current-group]:not([data-unselected])", globalState);
 }
 export function unselect(event, state, emit, globalState) {
-    var _a;
-    document.getElementById(state.id).removeAttribute("data-current-group");
-    (_a = globalState.groupProxy) === null || _a === void 0 ? void 0 : _a.remove();
-    globalState.groupProxy = getGroupProxy("[data-current-group]", globalState);
+    var _a, _b;
+    // Instead of removing data-current-group, mark the unselected element as unselected
+    // Preserving data-current-group makes it easy to do things like revert the state
+    document.getElementById(state.id).setAttribute("data-unselected", "true");
+    (_a = state.el.querySelector(".selection-indicator")) === null || _a === void 0 ? void 0 : _a.remove();
+    (_b = globalState.groupProxy) === null || _b === void 0 ? void 0 : _b.remove();
+    globalState.groupProxy = getGroupProxy("[data-current-group]:not([data-unselected])", globalState);
 }
 /**
  * This function receives a reference to a group of scene elements.

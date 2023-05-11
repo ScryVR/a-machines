@@ -74,7 +74,7 @@ export function translateMultiple(event: CustomEvent, state: Record<string, any>
 
 export function select(event: CustomEvent, state: Record<string, any>, emit: Function, globalState: Record<string, any>) {
   state.el.setAttribute("data-current-group", "true")
-
+  state.el.removeAttribute("data-unselected", "true")
   if (state.el.hasAttribute("groupId")) {
     const groupMates = document.querySelectorAll(`[groupId=${state.el.getAttribute("groupId")}]`)
     groupMates.forEach((el: any) => {
@@ -88,13 +88,16 @@ export function select(event: CustomEvent, state: Record<string, any>, emit: Fun
   }
 
   globalState.groupProxy?.remove()
-  globalState.groupProxy = getGroupProxy("[data-current-group]", globalState)
+  globalState.groupProxy = getGroupProxy("[data-current-group]:not([data-unselected])", globalState)
 }
 
 export function unselect(event: CustomEvent, state: Record<string, any>, emit: Function, globalState: Record<string, any>) {
-  document.getElementById(state.id).removeAttribute("data-current-group")
+  // Instead of removing data-current-group, mark the unselected element as unselected
+  // Preserving data-current-group makes it easy to do things like revert the state
+  document.getElementById(state.id).setAttribute("data-unselected", "true")
+  state.el.querySelector(".selection-indicator")?.remove()
   globalState.groupProxy?.remove()
-  globalState.groupProxy = getGroupProxy("[data-current-group]", globalState)
+  globalState.groupProxy = getGroupProxy("[data-current-group]:not([data-unselected])", globalState)
 }
 
 /**

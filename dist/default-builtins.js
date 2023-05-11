@@ -1,3 +1,4 @@
+import { builtinRegistry } from "./a-machine";
 import { machineState } from "./machineState";
 export const promptForText = {
     name: "promptForText",
@@ -36,9 +37,10 @@ export const activateTouchListener = {
         },
     },
     listener: createDomTouchListener,
-    canEmit: ["drag", "twoFingerDrag", "setDragProperty"],
+    canEmit: ["drag", "twoFingerDrag", "setDragProperty", "gridAlign", "createdGroup"],
 };
 let dragTargetId = "";
+const groupNumber = groupNumberGenerator();
 function createDomTouchListener(event) {
     var _a;
     dragTargetId = event.detail.id;
@@ -66,7 +68,6 @@ function createDomTouchListener(event) {
         <button id='done-btn'>Done</button>
         <button id='rotate-btn'>Rotate</button>
         <button id='grid-btn'>Grid snap</button>
-        <button id='group-btn' style="display: none;">Group</button>
         <button id='cancel-btn'>Cancel</button>
       </div>
       `;
@@ -75,9 +76,9 @@ function createDomTouchListener(event) {
             (_a = machineState.groupProxy) === null || _a === void 0 ? void 0 : _a.setAttribute("visible", false);
             document.querySelectorAll("[data-current-group]").forEach((el) => {
                 el.removeAttribute("data-current-group");
+                el.removeAttribute("data-unselected");
                 sendEventToTarget(el.getAttribute("id"), "doneBuilding", {});
             });
-            // sendEventToTarget(dragTargetId, "doneBuilding", {});
             touchListener.style.pointerEvents = "none";
             touchListener.style.visibility = "hidden";
         });
@@ -94,6 +95,7 @@ function createDomTouchListener(event) {
             (_a = machineState.groupProxy) === null || _a === void 0 ? void 0 : _a.setAttribute("visible", false);
             document.querySelectorAll("[data-current-group]").forEach((el) => {
                 el.removeAttribute("data-current-group");
+                el.removeAttribute("data-unselected");
                 sendEventToTarget(el.getAttribute("id"), "cancelBuilding", {});
             });
             touchListener.style.pointerEvents = "none";
@@ -122,23 +124,55 @@ function createDomTouchListener(event) {
         }
         prevTouch = touchEvent.touches[0];
     }, { passive: true });
-    touchListener.addEventListener("touchend", () => {
-        if (!isClicking) {
+    let debouncing = false;
+    touchListener.addEventListener("touchend", (touchEvent) => {
+        var _a;
+        if (!isClicking || debouncing) {
             return;
         }
-        // @ts-ignore
-        const cursor = document.querySelector("[cursor]").components.cursor;
-        if (cursor) {
-            cursor.onCursorDown.call(cursor, touchStartEvt);
-            const groupBtn = document.querySelector("#group-btn");
-            groupBtn.style.display = "inline-block";
-            cursor.twoWayEmit("click");
+        debouncing = true;
+        setTimeout(() => {
+            debouncing = false;
+        }, 100);
+        if (touchEvent.touches.length === 0) {
+            // @ts-ignore
+            const cursor = document.querySelector("[cursor]").components.cursor;
+            if (cursor) {
+                cursor.onCursorDown.call(cursor, touchStartEvt);
+                cursor.twoWayEmit("click");
+            }
+        }
+        else if (touchEvent.touches.length === 1) {
+            sendEventToTarget(dragTargetId, "gridAlign", {});
+        }
+        else if (touchEvent.touches.length === 2) {
+            const currentGroup = document.querySelectorAll("[data-current-group]:not([data-unselected])");
+            if (currentGroup.length === 1 || isAlreadyGroup(Array.from(currentGroup))) {
+                return;
+            }
+            const groupId = groupNumber.next().value;
+            currentGroup.forEach(el => {
+                el.setAttribute("groupId", `group-${groupId}`);
+            });
+            (_a = builtinRegistry.createdGroup) === null || _a === void 0 ? void 0 : _a.listener({ detail: { group: currentGroup, groupId } });
         }
     });
+    touchListener.oncontextmenu = () => false;
     scene.getAttribute("webxr").overlayElement.appendChild(touchListener);
 }
 function sendEventToTarget(id, eventName, detail) {
     document.getElementById(id).dispatchEvent(new CustomEvent(`aMachine:${eventName}`, {
         detail,
     }));
+}
+function* groupNumberGenerator() {
+    let groupNumber = 0;
+    while (1) {
+        groupNumber++;
+        yield groupNumber;
+    }
+}
+function isAlreadyGroup(selection) {
+    const groupId = selection[0].getAttribute("groupId");
+    return groupId && selection.every(el => el.getAttribute("groupId") === groupId);
 }

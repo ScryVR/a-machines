@@ -90,6 +90,7 @@ function createDomTouchListener(event: any) {
       machineState.groupProxy?.setAttribute("visible", false)
       document.querySelectorAll("[data-current-group]").forEach((el) => {
         el.removeAttribute("data-current-group")
+        el.removeAttribute("data-unselected")
         sendEventToTarget(el.getAttribute("id"), "doneBuilding", {});
       })
       touchListener.style.pointerEvents = "none";
@@ -107,6 +108,7 @@ function createDomTouchListener(event: any) {
       machineState.groupProxy?.setAttribute("visible", false)
       document.querySelectorAll("[data-current-group]").forEach((el) => {
         el.removeAttribute("data-current-group")
+        el.removeAttribute("data-unselected")
         sendEventToTarget(el.getAttribute("id"), "cancelBuilding", {});
       })
       touchListener.style.pointerEvents = "none";
@@ -164,7 +166,7 @@ function createDomTouchListener(event: any) {
       } else if (touchEvent.touches.length === 1) {
         sendEventToTarget(dragTargetId, "gridAlign", {})
       } else if (touchEvent.touches.length === 2) {
-        const currentGroup = document.querySelectorAll("[data-current-group]")
+        const currentGroup = document.querySelectorAll("[data-current-group]:not([data-unselected])")
         if (currentGroup.length === 1 || isAlreadyGroup(Array.from(currentGroup))) {
           return
         }

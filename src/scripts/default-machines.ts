@@ -127,13 +127,24 @@ export const building: IMachine = {
   listeners: {
     interact: (event: any, state: Record<string, any>, emit: Function, globalState: Record<string, any>) => {
       state.el = state.el || document.getElementById(state.id);
-      const isBeingSelected = !state.el.hasAttribute("data-current-group")
+      const isBeingSelected = !state.el.hasAttribute("data-current-group") || state.el.hasAttribute("data-unselected")
       const isOnlySelection = !isBeingSelected && document.querySelectorAll("[data-current-group]").length === 1
       if (isBeingSelected || isOnlySelection) {
         // Mark element as selected
         state.el.querySelector(".selection-indicator")?.remove()
         const selectionIndicator = document.createElement(state.el.tagName.toLowerCase())
         selectionIndicator.setAttribute("material", { emissive: "#0ff", wireframe: true, color: "#0ff" })
+        if (state.el.tagName === "A-CYLINDER") {
+          selectionIndicator.setAttribute("geometry", {
+            segmentsRadial: 6,
+            segmentsHeight: 1
+          })
+        } else if (state.el.tagName === "A-SPHERE") {
+          selectionIndicator.setAttribute("geometry", {
+            segmentsWidth: 12,
+            segmentsHeight: 12
+          })
+        }
         selectionIndicator.classList.add("selection-indicator")
         state.el.appendChild(selectionIndicator)
 

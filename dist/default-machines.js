@@ -100,6 +100,7 @@ export const building = {
         "createdBuilding:builtins",
         "modifiedBuilding:builtins",
         "consumedResources:builtins",
+        "createdGroup:builtins",
         "outOfEnergy:builtins",
         "outOfResources:builtins",
     ],
@@ -115,13 +116,25 @@ export const building = {
         interact: (event, state, emit, globalState) => {
             var _a;
             state.el = state.el || document.getElementById(state.id);
-            const isBeingSelected = !state.el.hasAttribute("data-current-group");
+            const isBeingSelected = !state.el.hasAttribute("data-current-group") || state.el.hasAttribute("data-unselected");
             const isOnlySelection = !isBeingSelected && document.querySelectorAll("[data-current-group]").length === 1;
             if (isBeingSelected || isOnlySelection) {
                 // Mark element as selected
                 (_a = state.el.querySelector(".selection-indicator")) === null || _a === void 0 ? void 0 : _a.remove();
                 const selectionIndicator = document.createElement(state.el.tagName.toLowerCase());
                 selectionIndicator.setAttribute("material", { emissive: "#0ff", wireframe: true, color: "#0ff" });
+                if (state.el.tagName === "A-CYLINDER") {
+                    selectionIndicator.setAttribute("geometry", {
+                        segmentsRadial: 6,
+                        segmentsHeight: 1
+                    });
+                }
+                else if (state.el.tagName === "A-SPHERE") {
+                    selectionIndicator.setAttribute("geometry", {
+                        segmentsWidth: 12,
+                        segmentsHeight: 12
+                    });
+                }
                 selectionIndicator.classList.add("selection-indicator");
                 state.el.appendChild(selectionIndicator);
                 // Update selection state
@@ -166,7 +179,6 @@ export const building = {
             emit("modifiedBuilding:builtins", { el: state.el });
         },
         setCurrentState: (event, state) => {
-            console.log("Going to set the current state I guess");
             if (!state.initialState) {
                 return;
             }
