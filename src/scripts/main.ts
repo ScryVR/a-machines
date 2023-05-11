@@ -8,3 +8,10 @@ export * from "./a-machine"
 Object.values(defaultMachines).forEach(registerMachine)
 Object.entries(defaultBuiltins).forEach(([event, builtinMachine]) => registerBuiltin(event, builtinMachine))
 
+registerBuiltin("createdGroup", {
+  name: "createdGroupLogger",
+  listener: (event: any) => {
+    console.log("Created a group", event)
+  }
+})
+

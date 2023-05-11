@@ -41,16 +41,13 @@ export const activateTouchListener = {
 let dragTargetId = "";
 function createDomTouchListener(event) {
     var _a;
+    dragTargetId = event.detail.id;
     let touchListener = document.querySelector(".a-machine-touch-listener");
     if (touchListener) {
-        if (touchListener.style.visibility !== "hidden") {
-            sendEventToTarget(dragTargetId, "multiselect", { id: event.detail.id });
-        }
         touchListener.style.pointerEvents = "auto";
         touchListener.style.visibility = "visible";
         return;
     }
-    dragTargetId = event.detail.id;
     const scene = document.querySelector("a-scene");
     if (!((_a = scene.getAttribute("webxr")) === null || _a === void 0 ? void 0 : _a.overlayElement)) {
         console.warn("a-machine could not prompt for text - no webxr.overlayElement defined on a-scene");
@@ -69,6 +66,7 @@ function createDomTouchListener(event) {
         <button id='done-btn'>Done</button>
         <button id='rotate-btn'>Rotate</button>
         <button id='grid-btn'>Grid snap</button>
+        <button id='group-btn' style="display: none;">Group</button>
         <button id='cancel-btn'>Cancel</button>
       </div>
       `;
@@ -132,6 +130,8 @@ function createDomTouchListener(event) {
         const cursor = document.querySelector("[cursor]").components.cursor;
         if (cursor) {
             cursor.onCursorDown.call(cursor, touchStartEvt);
+            const groupBtn = document.querySelector("#group-btn");
+            groupBtn.style.display = "inline-block";
             cursor.twoWayEmit("click");
         }
     });

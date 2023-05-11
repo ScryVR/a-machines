@@ -112,6 +112,7 @@ export const building: IMachine = {
     "createdBuilding:builtins",
     "modifiedBuilding:builtins",
     "consumedResources:builtins",
+    "createdGroup:builtins",
     "outOfEnergy:builtins",
     "outOfResources:builtins",
   ],
@@ -184,7 +185,6 @@ export const building: IMachine = {
       emit("modifiedBuilding:builtins", { el: state.el });
     },
     setCurrentState: (event: any, state: Record<string, any>) => {
-      console.log("Going to set the current state I guess")
       if (!state.initialState) {
         return
       }

@@ -76,8 +76,15 @@ export function select(event: CustomEvent, state: Record<string, any>, emit: Fun
   state.el.setAttribute("data-current-group", "true")
 
   if (state.el.hasAttribute("groupId")) {
-    const groupMates = Array.from(document.querySelectorAll(`[groupId=${state.el.getAttribute("groupId")}]`)).map(el => el.getAttribute("id"))
-    globalState.currentGroup = globalState.currentGroup.concat(groupMates)
+    const groupMates = document.querySelectorAll(`[groupId=${state.el.getAttribute("groupId")}]`)
+    groupMates.forEach((el: any) => {
+      el.setAttribute("data-current-group", "true")
+      el.components["a-machine"].state.initialState = {
+        position: { ...el.object3D.position },
+        scale: { ...el.object3D.scale },
+        rotation: { ...el.object3D.rotation }
+      }
+    })
   }
 
   globalState.groupProxy?.remove()
