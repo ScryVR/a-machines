@@ -78,28 +78,30 @@ export function select(event, state, emit, globalState) {
     if (state.el.hasAttribute("groupId")) {
         const groupMates = document.querySelectorAll(`[groupId=${state.el.getAttribute("groupId")}]`);
         groupMates.forEach((el) => {
+            var _a;
             el.setAttribute("data-current-group", "true");
             el.components["a-machine"].state.initialState = {
                 position: Object.assign({}, el.object3D.position),
                 scale: Object.assign({}, el.object3D.scale),
                 rotation: Object.assign({}, el.object3D.rotation)
             };
-            const selectionIndicator = document.createElement(state.el.tagName.toLowerCase());
+            (_a = el.querySelector(".selection-indicator")) === null || _a === void 0 ? void 0 : _a.remove();
+            const selectionIndicator = document.createElement(el.tagName.toLowerCase());
             selectionIndicator.setAttribute("material", { emissive: "#0ff", wireframe: true, color: "#0ff" });
-            if (state.el.tagName === "A-CYLINDER") {
+            if (el.tagName === "A-CYLINDER") {
                 selectionIndicator.setAttribute("geometry", {
                     segmentsRadial: 6,
                     segmentsHeight: 1
                 });
             }
-            else if (state.el.tagName === "A-SPHERE") {
+            else if (el.tagName === "A-SPHERE") {
                 selectionIndicator.setAttribute("geometry", {
                     segmentsWidth: 12,
                     segmentsHeight: 12
                 });
             }
             selectionIndicator.classList.add("selection-indicator");
-            state.el.appendChild(selectionIndicator);
+            el.appendChild(selectionIndicator);
         });
     }
     (_a = globalState.groupProxy) === null || _a === void 0 ? void 0 : _a.remove();

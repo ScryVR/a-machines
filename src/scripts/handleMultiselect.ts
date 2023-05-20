@@ -84,21 +84,22 @@ export function select(event: CustomEvent, state: Record<string, any>, emit: Fun
         scale: { ...el.object3D.scale },
         rotation: { ...el.object3D.rotation }
       }
-      const selectionIndicator = document.createElement(state.el.tagName.toLowerCase())
+      el.querySelector(".selection-indicator")?.remove()
+      const selectionIndicator = document.createElement(el.tagName.toLowerCase())
       selectionIndicator.setAttribute("material", { emissive: "#0ff", wireframe: true, color: "#0ff" })
-      if (state.el.tagName === "A-CYLINDER") {
+      if (el.tagName === "A-CYLINDER") {
         selectionIndicator.setAttribute("geometry", {
           segmentsRadial: 6,
           segmentsHeight: 1
         })
-      } else if (state.el.tagName === "A-SPHERE") {
+      } else if (el.tagName === "A-SPHERE") {
         selectionIndicator.setAttribute("geometry", {
           segmentsWidth: 12,
           segmentsHeight: 12
         })
       }
       selectionIndicator.classList.add("selection-indicator")
-      state.el.appendChild(selectionIndicator)
+      el.appendChild(selectionIndicator)
     })
   }
 
