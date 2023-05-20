@@ -74,7 +74,7 @@ export function translateMultiple(event, state, globalState) {
 export function select(event, state, emit, globalState) {
     var _a;
     state.el.setAttribute("data-current-group", "true");
-    state.el.removeAttribute("data-unselected", "true");
+    state.el.removeAttribute("data-unselected");
     if (state.el.hasAttribute("groupId")) {
         const groupMates = document.querySelectorAll(`[groupId=${state.el.getAttribute("groupId")}]`);
         groupMates.forEach((el) => {
@@ -84,6 +84,22 @@ export function select(event, state, emit, globalState) {
                 scale: Object.assign({}, el.object3D.scale),
                 rotation: Object.assign({}, el.object3D.rotation)
             };
+            const selectionIndicator = document.createElement(state.el.tagName.toLowerCase());
+            selectionIndicator.setAttribute("material", { emissive: "#0ff", wireframe: true, color: "#0ff" });
+            if (state.el.tagName === "A-CYLINDER") {
+                selectionIndicator.setAttribute("geometry", {
+                    segmentsRadial: 6,
+                    segmentsHeight: 1
+                });
+            }
+            else if (state.el.tagName === "A-SPHERE") {
+                selectionIndicator.setAttribute("geometry", {
+                    segmentsWidth: 12,
+                    segmentsHeight: 12
+                });
+            }
+            selectionIndicator.classList.add("selection-indicator");
+            state.el.appendChild(selectionIndicator);
         });
     }
     (_a = globalState.groupProxy) === null || _a === void 0 ? void 0 : _a.remove();

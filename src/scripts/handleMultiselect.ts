@@ -74,7 +74,7 @@ export function translateMultiple(event: CustomEvent, state: Record<string, any>
 
 export function select(event: CustomEvent, state: Record<string, any>, emit: Function, globalState: Record<string, any>) {
   state.el.setAttribute("data-current-group", "true")
-  state.el.removeAttribute("data-unselected", "true")
+  state.el.removeAttribute("data-unselected")
   if (state.el.hasAttribute("groupId")) {
     const groupMates = document.querySelectorAll(`[groupId=${state.el.getAttribute("groupId")}]`)
     groupMates.forEach((el: any) => {
@@ -84,6 +84,21 @@ export function select(event: CustomEvent, state: Record<string, any>, emit: Fun
         scale: { ...el.object3D.scale },
         rotation: { ...el.object3D.rotation }
       }
+      const selectionIndicator = document.createElement(state.el.tagName.toLowerCase())
+      selectionIndicator.setAttribute("material", { emissive: "#0ff", wireframe: true, color: "#0ff" })
+      if (state.el.tagName === "A-CYLINDER") {
+        selectionIndicator.setAttribute("geometry", {
+          segmentsRadial: 6,
+          segmentsHeight: 1
+        })
+      } else if (state.el.tagName === "A-SPHERE") {
+        selectionIndicator.setAttribute("geometry", {
+          segmentsWidth: 12,
+          segmentsHeight: 12
+        })
+      }
+      selectionIndicator.classList.add("selection-indicator")
+      state.el.appendChild(selectionIndicator)
     })
   }
 

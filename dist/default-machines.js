@@ -234,6 +234,7 @@ export const building = {
         build: createNewBuilding,
         cancelBuilding: (event, state, emit) => {
             var _a;
+            state.el = state.el || document.getElementById(state.id);
             state.el.object3D.position.set(state.initialState.position.x, state.initialState.position.y, state.initialState.position.z);
             state.el.object3D.scale.set(state.initialState.scale.x, state.initialState.scale.y, state.initialState.scale.z);
             state.el.object3D.rotation.set(state.initialState.rotation._x, state.initialState.rotation._y, state.initialState.rotation._z);
@@ -242,6 +243,7 @@ export const building = {
         },
         doneBuilding: (event, state, emit, globalState) => {
             var _a, _b;
+            state.el = state.el || document.getElementById(state.id);
             try {
                 // Handle energy costs
                 const { x, y, z } = state.el.object3D.scale;

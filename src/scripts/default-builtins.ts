@@ -79,10 +79,14 @@ function createDomTouchListener(event: any) {
     );
     touchListener.innerHTML =
       /*html*/`
+      <!--div class="advanced-menu">
+        <button>Group</button>
+        <button>Blueprint</button>
+      </div>
+      <button id='advanced-menu-btn'>&Hat;</button-->
       <div class="button-wrapper">
         <button id='done-btn'>Done</button>
         <button id='rotate-btn'>Rotate</button>
-        <button id='grid-btn'>Grid snap</button>
         <button id='cancel-btn'>Cancel</button>
       </div>
       `;
@@ -101,9 +105,6 @@ function createDomTouchListener(event: any) {
       const selectedProperty = event.target.classList.contains("active") ? "rotation" : "scale"
       sendEventToTarget(dragTargetId, "setDragProperty", { selectedProperty })
     })
-    touchListener.querySelector("#grid-btn").addEventListener("click", () => {
-      sendEventToTarget(dragTargetId, "gridAlign", {})
-    })
     touchListener.querySelector("#cancel-btn").addEventListener("click", () => {
       machineState.groupProxy?.setAttribute("visible", false)
       document.querySelectorAll("[data-current-group]").forEach((el) => {
@@ -114,6 +115,10 @@ function createDomTouchListener(event: any) {
       touchListener.style.pointerEvents = "none";
       touchListener.style.visibility = "hidden";
     });
+    // touchListener.querySelector("#advanced-menu-btn").addEventListener("click", () => {
+    //   document.querySelector(".advanced-menu").classList.toggle("visible")
+    //   document.querySelector("#advanced-menu-btn").classList.toggle("flipped")
+    // })
   }
   let prevTouch: any = null;
   let touchStartEvt: any = null
@@ -191,7 +196,7 @@ function sendEventToTarget(id: string, eventName: string, detail: any) {
 }
 
 function* groupNumberGenerator() {
-  let groupNumber = 0
+  let groupNumber = document.querySelectorAll("[groupId").length
   while(1) {
     groupNumber++
     yield groupNumber

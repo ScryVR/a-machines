@@ -64,10 +64,14 @@ function createDomTouchListener(event) {
         console.warn("To add custom UI to the touch listener, define a Web Component named <a-machine-touch-ui>");
         touchListener.innerHTML =
             /*html*/ `
+      <!--div class="advanced-menu">
+        <button>Group</button>
+        <button>Blueprint</button>
+      </div>
+      <button id='advanced-menu-btn'>&Hat;</button-->
       <div class="button-wrapper">
         <button id='done-btn'>Done</button>
         <button id='rotate-btn'>Rotate</button>
-        <button id='grid-btn'>Grid snap</button>
         <button id='cancel-btn'>Cancel</button>
       </div>
       `;
@@ -87,9 +91,6 @@ function createDomTouchListener(event) {
             const selectedProperty = event.target.classList.contains("active") ? "rotation" : "scale";
             sendEventToTarget(dragTargetId, "setDragProperty", { selectedProperty });
         });
-        touchListener.querySelector("#grid-btn").addEventListener("click", () => {
-            sendEventToTarget(dragTargetId, "gridAlign", {});
-        });
         touchListener.querySelector("#cancel-btn").addEventListener("click", () => {
             var _a;
             (_a = machineState.groupProxy) === null || _a === void 0 ? void 0 : _a.setAttribute("visible", false);
@@ -101,6 +102,10 @@ function createDomTouchListener(event) {
             touchListener.style.pointerEvents = "none";
             touchListener.style.visibility = "hidden";
         });
+        // touchListener.querySelector("#advanced-menu-btn").addEventListener("click", () => {
+        //   document.querySelector(".advanced-menu").classList.toggle("visible")
+        //   document.querySelector("#advanced-menu-btn").classList.toggle("flipped")
+        // })
     }
     let prevTouch = null;
     let touchStartEvt = null;
@@ -166,7 +171,7 @@ function sendEventToTarget(id, eventName, detail) {
     }));
 }
 function* groupNumberGenerator() {
-    let groupNumber = 0;
+    let groupNumber = document.querySelectorAll("[groupId").length;
     while (1) {
         groupNumber++;
         yield groupNumber;

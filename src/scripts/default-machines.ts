@@ -260,6 +260,7 @@ export const building: IMachine = {
       state: Record<string, any>,
       emit: Function
     ) => {
+      state.el = state.el || document.getElementById(state.id)
       state.el.object3D.position.set(
         state.initialState.position.x,
         state.initialState.position.y,
@@ -284,6 +285,7 @@ export const building: IMachine = {
       emit: Function,
       globalState: Record<string, any>
     ) => {
+      state.el = state.el || document.getElementById(state.id)
       try {
         // Handle energy costs
         const { x, y, z } = state.el.object3D.scale
