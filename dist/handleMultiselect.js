@@ -119,40 +119,24 @@ export function unselect(event, state, emit, globalState) {
 export function createFromBlueprint(event, state, emit, globalState) {
     const { detail: { groupId } } = event;
     const group = Array.from(document.querySelectorAll(`[groupId=${groupId}]`));
-    // Compute the centroid of all the group elements.
-    // The size of the group elements does not affect this calculation.
-    // NOTE: Unlike getGroupProxy, this computation uses local coordinates, since I only need to translate the objects' positions
-    let centroid = group.reduce((acc, el) => {
-        acc.x += el.object3D.position.x;
-        acc.y += el.object3D.position.y;
-        acc.z += el.object3D.position.z;
-        return acc;
-    }, { x: 0, y: 0, z: 0 });
-    centroid.x /= group.length;
-    centroid.y /= group.length;
-    centroid.z /= group.length;
-    const { detail: { intersection: { point, face: { normal }, }, }, } = event;
-    const offset = {
-        x: centroid.x - point.x,
-        y: centroid.y - point.y,
-        z: centroid.z - point.z
-    };
     const newGroupId = crypto.randomUUID().split("-")[4];
     const root = document.querySelector(globalState.rootSelector);
+    let newGroupMember;
     group.forEach((el) => {
         const copyEl = document.createElement(el.tagName.toLowerCase());
         copyEl.object3D.copy(el.object3D, false);
-        copyEl.object3D.position.x -= offset.x;
-        copyEl.object3D.position.y -= offset.y;
-        copyEl.object3D.position.z -= offset.z;
         copyEl.setAttribute("groupId", `group-${newGroupId}`);
-        ["material", "a-machine", "shadow", "resource"].forEach((attr) => {
+        ["material", "a-machine", "shadow", "light", "resource"].forEach((attr) => {
             const originalAttr = el.getAttribute(attr);
             if (originalAttr) {
                 copyEl.setAttribute(attr, originalAttr);
             }
         });
         root.appendChild(copyEl);
+        newGroupMember || (newGroupMember = copyEl);
+    });
+    setTimeout(() => {
+        newGroupMember.dispatchEvent(new CustomEvent("aMachine:interact", event));
     });
 }
 /**
@@ -189,13 +173,14 @@ function getGroupProxy(groupSelector, globalState) {
     const root = document.querySelector(globalState.rootSelector);
     // @ts-ignore
     centroid.y -= root.object3D.position.y;
+    centroidWrapperEl.object3D.position.set(centroid.x, centroid.y, centroid.z);
+    root.appendChild(centroidWrapperEl);
     if (group.length > 1) {
         const groupWrapperBox = document.createElement("a-box");
         groupWrapperBox.setAttribute("material", { wireframe: true, emissive: "#faf", color: "#faf" });
         groupWrapperBox.object3D.scale.set(centroid.maxes.x - centroid.mins.x, centroid.maxes.y - centroid.mins.y, centroid.maxes.z - centroid.mins.z);
         centroidWrapperEl.appendChild(groupWrapperBox);
     }
-    centroidWrapperEl.object3D.position.set(centroid.x, centroid.y, centroid.z);
     // Create proxy children and append them to wrapper
     group.forEach((el) => {
         const proxyEl = document.createElement("a-entity");
@@ -209,12 +194,7 @@ function getGroupProxy(groupSelector, globalState) {
         el.object3D.getWorldPosition(proxyEl.object3D.position);
         proxyEl.object3D.position.sub(centroid);
         proxyEl.object3D.position.y -= root.object3D.position.y;
-        // const attributes = ["material", "color", "resource", "light"]
-        // attributes.forEach(attr => {
-        //   proxyEl.setAttribute(attr, el.getAttribute(attr))
-        // })
         centroidWrapperEl.appendChild(proxyEl);
     });
-    document.querySelector(globalState.rootSelector).appendChild(centroidWrapperEl);
     return centroidWrapperEl;
 }

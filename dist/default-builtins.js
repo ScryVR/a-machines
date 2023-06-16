@@ -1,4 +1,5 @@
 import { builtinRegistry } from "./a-machine";
+import { ACTIONS } from "./components/a-machine--footer";
 import { machineState } from "./machineState";
 export const promptForText = {
     name: "promptForText",
@@ -41,16 +42,17 @@ export const activateTouchListener = {
 };
 let dragTargetId = "";
 function createDomTouchListener(event) {
-    var _a;
+    var _a, _b;
     dragTargetId = event.detail.id;
     let touchListener = document.querySelector(".a-machine-touch-listener");
+    (_a = document.querySelector("#actionSelector")) === null || _a === void 0 ? void 0 : _a.setAttribute("options", ACTIONS.join(","));
     if (touchListener) {
         touchListener.style.pointerEvents = "auto";
         touchListener.style.visibility = "visible";
         return;
     }
     const scene = document.querySelector("a-scene");
-    if (!((_a = scene.getAttribute("webxr")) === null || _a === void 0 ? void 0 : _a.overlayElement)) {
+    if (!((_b = scene.getAttribute("webxr")) === null || _b === void 0 ? void 0 : _b.overlayElement)) {
         console.warn("a-machine could not prompt for text - no webxr.overlayElement defined on a-scene");
         return;
     }

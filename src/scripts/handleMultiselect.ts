@@ -126,7 +126,7 @@ export function createFromBlueprint(event: CustomEvent, state: Record<string, an
     const copyEl: any = document.createElement(el.tagName.toLowerCase());
     copyEl.object3D.copy(el.object3D, false)
     copyEl.setAttribute("groupId", `group-${newGroupId}`);
-    ["material", "a-machine", "shadow", "resource"].forEach((attr) => {
+    ["material", "a-machine", "shadow", "light", "resource"].forEach((attr) => {
       const originalAttr = el.getAttribute(attr)
       if (originalAttr) {
         copyEl.setAttribute(attr, originalAttr)
