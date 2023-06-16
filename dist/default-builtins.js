@@ -40,7 +40,6 @@ export const activateTouchListener = {
     canEmit: ["drag", "twoFingerDrag", "setDragProperty", "gridAlign", "createdGroup"],
 };
 let dragTargetId = "";
-const groupNumber = groupNumberGenerator();
 function createDomTouchListener(event) {
     var _a;
     dragTargetId = event.detail.id;
@@ -72,6 +71,7 @@ function createDomTouchListener(event) {
       <div class="button-wrapper">
         <button id='done-btn'>Done</button>
         <button id='rotate-btn'>Rotate</button>
+        <button id='group-btn'>Group</button>
         <button id='cancel-btn'>Cancel</button>
       </div>
       `;
@@ -102,6 +102,19 @@ function createDomTouchListener(event) {
             touchListener.style.pointerEvents = "none";
             touchListener.style.visibility = "hidden";
         });
+        touchListener.querySelector("#group-btn").addEventListener("click", (event) => {
+            var _a;
+            event.target.classList.add("active");
+            const currentGroup = document.querySelectorAll("[data-current-group]:not([data-unselected])");
+            if (currentGroup.length === 1 || isAlreadyGroup(Array.from(currentGroup))) {
+                return;
+            }
+            const groupId = crypto.randomUUID().split("-")[4];
+            currentGroup.forEach(el => {
+                el.setAttribute("groupId", `group-${groupId}`);
+            });
+            (_a = builtinRegistry.createdGroup) === null || _a === void 0 ? void 0 : _a.listener({ detail: { group: currentGroup, groupId } });
+        });
         // touchListener.querySelector("#advanced-menu-btn").addEventListener("click", () => {
         //   document.querySelector(".advanced-menu").classList.toggle("visible")
         //   document.querySelector("#advanced-menu-btn").classList.toggle("flipped")
@@ -131,7 +144,6 @@ function createDomTouchListener(event) {
     }, { passive: true });
     let debouncing = false;
     touchListener.addEventListener("touchend", (touchEvent) => {
-        var _a;
         if (!isClicking || debouncing) {
             return;
         }
@@ -150,17 +162,6 @@ function createDomTouchListener(event) {
         else if (touchEvent.touches.length === 1) {
             sendEventToTarget(dragTargetId, "gridAlign", {});
         }
-        else if (touchEvent.touches.length === 2) {
-            const currentGroup = document.querySelectorAll("[data-current-group]:not([data-unselected])");
-            if (currentGroup.length === 1 || isAlreadyGroup(Array.from(currentGroup))) {
-                return;
-            }
-            const groupId = groupNumber.next().value;
-            currentGroup.forEach(el => {
-                el.setAttribute("groupId", `group-${groupId}`);
-            });
-            (_a = builtinRegistry.createdGroup) === null || _a === void 0 ? void 0 : _a.listener({ detail: { group: currentGroup, groupId } });
-        }
     });
     touchListener.oncontextmenu = () => false;
     scene.getAttribute("webxr").overlayElement.appendChild(touchListener);
@@ -169,13 +170,6 @@ function sendEventToTarget(id, eventName, detail) {
     document.getElementById(id).dispatchEvent(new CustomEvent(`aMachine:${eventName}`, {
         detail,
     }));
-}
-function* groupNumberGenerator() {
-    let groupNumber = document.querySelectorAll("[groupId").length;
-    while (1) {
-        groupNumber++;
-        yield groupNumber;
-    }
 }
 function isAlreadyGroup(selection) {
     const groupId = selection[0].getAttribute("groupId");

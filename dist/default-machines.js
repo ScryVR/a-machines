@@ -1,4 +1,4 @@
-import { select, transformMultiple, translateMultiple, unselect } from "./handleMultiselect";
+import { createFromBlueprint, select, transformMultiple, translateMultiple, unselect } from "./handleMultiselect";
 import { deductEnergy, deductResources, } from "./transactionHandlers/deductEnergy";
 export const buttonMachine = {
     name: "button",
@@ -360,12 +360,18 @@ function setMaterial(event, state, emit, globalState) {
 }
 function createNewBuilding(event, state, emit, globalState) {
     var _a;
-    const element = document.getElementById(state.id);
     let tag = globalState.actionArg;
     let scale = { x: 1, y: 1, z: 1 };
     if (globalState.actionArg === "copy") {
+        const selectedEl = document.getElementById(state.id);
+        const groupId = selectedEl.getAttribute("groupId");
+        if (groupId) {
+            event.detail.groupId = groupId;
+            createFromBlueprint(event, state, emit, globalState);
+            return;
+        }
         tag = document.getElementById(state.id).tagName.toLowerCase().replace("a-", "");
-        scale = element.object3D.scale;
+        scale = selectedEl.object3D.scale;
     }
     if (["box", "sphere", "cylinder", ...(globalState.user.customBuildings || [])].includes(tag)) {
         const { detail: { intersection: { point, face: { normal }, }, }, } = event;

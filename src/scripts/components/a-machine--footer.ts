@@ -2,7 +2,7 @@
 import { registerMafiuComponent } from "mafiu/dist/generator";
 import { machineState } from "../machineState";
 const name = "a-machine--footer";
-const ACTIONS = ["interact", "build", "set material"];
+export const ACTIONS = ["interact", "build", "set material"];
 let template = /*html*/ `
 <style>
   scrolling-selector.has-swiping-indicator::before {
@@ -34,6 +34,7 @@ let template = /*html*/ `
   }
 </style>
 <scrolling-selector
+  id="actionSelector"
   class="has-swiping-indicator"
   style="position: relative;"
   options="{{actions}}"

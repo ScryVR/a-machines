@@ -1,6 +1,6 @@
 {
   "name": "aframe-machines",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "main": "dist/main.js",
   "license": "MIT",
   "devDependencies": {

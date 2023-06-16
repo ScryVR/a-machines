@@ -1,4 +1,5 @@
 import { builtinRegistry } from "./a-machine";
+import { ACTIONS } from "./components/a-machine--footer";
 import { machineState } from "./machineState";
 
 export interface IBuiltin {
@@ -56,6 +57,7 @@ function createDomTouchListener(event: any) {
   let touchListener: HTMLElement = document.querySelector(
     ".a-machine-touch-listener"
     );
+  document.querySelector("#actionSelector")?.setAttribute("options", ACTIONS.join(","))
   if (touchListener) {
     touchListener.style.pointerEvents = "auto";
     touchListener.style.visibility = "visible";
