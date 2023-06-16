@@ -116,6 +116,53 @@ export function unselect(event: CustomEvent, state: Record<string, any>, emit: F
   globalState.groupProxy = getGroupProxy("[data-current-group]:not([data-unselected])", globalState)
 }
 
+export function createFromBlueprint(event: CustomEvent, state: Record<string, any>, emit: Function, globalState: Record<string, any>) {
+  const { detail: { groupId } } = event
+  const group = Array.from(document.querySelectorAll(`[groupId=${groupId}]`))
+  // Compute the centroid of all the group elements.
+  // The size of the group elements does not affect this calculation.
+  // NOTE: Unlike getGroupProxy, this computation uses local coordinates, since I only need to translate the objects' positions
+  let centroid = group.reduce((acc: Record<string, number>, el: any) => {
+    acc.x += el.object3D.position.x
+    acc.y += el.object3D.position.y
+    acc.z += el.object3D.position.z
+    return acc
+  }, { x: 0, y: 0, z: 0 })
+  centroid.x /= group.length
+  centroid.y /= group.length
+  centroid.z /= group.length
+  const {
+    detail: {
+      intersection: {
+        point,
+        face: { normal },
+      },
+    },
+  } = event;
+  const offset = {
+    x: centroid.x - point.x,
+    y: centroid.y - point.y,
+    z: centroid.z - point.z
+  }
+  const newGroupId = crypto.randomUUID().split("-")[4]
+  const root = document.querySelector(globalState.rootSelector)
+  group.forEach((el: any) => {
+    const copyEl: any = document.createElement(el.tagName.toLowerCase());
+    copyEl.object3D.copy(el.object3D, false)
+    copyEl.object3D.position.x -= offset.x;
+    copyEl.object3D.position.y -= offset.y;
+    copyEl.object3D.position.z -= offset.z;
+    copyEl.setAttribute("groupId", `group-${newGroupId}`);
+    ["material", "a-machine", "shadow", "resource"].forEach((attr) => {
+      const originalAttr = el.getAttribute(attr)
+      if (originalAttr) {
+        copyEl.setAttribute(attr, originalAttr)
+      }
+    })
+    root.appendChild(copyEl)
+  })
+}
+
 /**
  * This function receives a reference to a group of scene elements.
  * It returns a set of elements whose scales, rotations, and world positions are identical to the original group's.

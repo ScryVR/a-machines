@@ -1,5 +1,5 @@
 import { IMachine } from "./a-machine";
-import { select, transformMultiple, translateMultiple, unselect } from "./handleMultiselect";
+import { createFromBlueprint, select, transformMultiple, translateMultiple, unselect } from "./handleMultiselect";
 import {
   deductEnergy,
   deductResources,
@@ -428,12 +428,18 @@ function createNewBuilding(
   emit: Function,
   globalState: Record<string, any>
 ) {
-  const element = document.getElementById(state.id) as any
   let tag = globalState.actionArg
   let scale = { x: 1, y: 1, z: 1 }
   if (globalState.actionArg === "copy") {
+    const selectedEl = document.getElementById(state.id) as any
+    const groupId = selectedEl.getAttribute("groupId")
+    if (groupId) {
+      event.detail.groupId = groupId
+      createFromBlueprint(event, state, emit, globalState)
+      return
+    }
     tag = document.getElementById(state.id).tagName.toLowerCase().replace("a-", "")
-    scale = element.object3D.scale
+    scale = selectedEl.object3D.scale
   }
   if (["box", "sphere", "cylinder", ...( globalState.user.customBuildings || [])].includes(tag)) {
     const {

@@ -51,7 +51,6 @@ export const activateTouchListener: IBuiltin = {
 };
 
 let dragTargetId: string = "";
-const groupNumber = groupNumberGenerator()
 function createDomTouchListener(event: any) {
   dragTargetId = event.detail.id;
   let touchListener: HTMLElement = document.querySelector(
@@ -87,6 +86,7 @@ function createDomTouchListener(event: any) {
       <div class="button-wrapper">
         <button id='done-btn'>Done</button>
         <button id='rotate-btn'>Rotate</button>
+        <button id='group-btn'>Group</button>
         <button id='cancel-btn'>Cancel</button>
       </div>
       `;
@@ -115,6 +115,18 @@ function createDomTouchListener(event: any) {
       touchListener.style.pointerEvents = "none";
       touchListener.style.visibility = "hidden";
     });
+    touchListener.querySelector("#group-btn").addEventListener("click", (event: any) => {
+      event.target.classList.add("active")
+      const currentGroup = document.querySelectorAll("[data-current-group]:not([data-unselected])")
+      if (currentGroup.length === 1 || isAlreadyGroup(Array.from(currentGroup))) {
+        return
+      }
+      const groupId = crypto.randomUUID().split("-")[4]
+      currentGroup.forEach(el => {
+        el.setAttribute("groupId", `group-${groupId}`)
+      })
+      builtinRegistry.createdGroup?.listener({ detail: { group: currentGroup, groupId }})
+    })
     // touchListener.querySelector("#advanced-menu-btn").addEventListener("click", () => {
     //   document.querySelector(".advanced-menu").classList.toggle("visible")
     //   document.querySelector("#advanced-menu-btn").classList.toggle("flipped")
@@ -170,16 +182,6 @@ function createDomTouchListener(event: any) {
         }
       } else if (touchEvent.touches.length === 1) {
         sendEventToTarget(dragTargetId, "gridAlign", {})
-      } else if (touchEvent.touches.length === 2) {
-        const currentGroup = document.querySelectorAll("[data-current-group]:not([data-unselected])")
-        if (currentGroup.length === 1 || isAlreadyGroup(Array.from(currentGroup))) {
-          return
-        }
-        const groupId = groupNumber.next().value
-        currentGroup.forEach(el => {
-          el.setAttribute("groupId", `group-${groupId}`)
-        })
-        builtinRegistry.createdGroup?.listener({ detail: { group: currentGroup, groupId }})
       }
     }
   )
@@ -193,14 +195,6 @@ function sendEventToTarget(id: string, eventName: string, detail: any) {
       detail,
     })
   );
-}
-
-function* groupNumberGenerator() {
-  let groupNumber = document.querySelectorAll("[groupId").length
-  while(1) {
-    groupNumber++
-    yield groupNumber
-  }
 }
 
 function isAlreadyGroup(selection: Array<Element>) {
