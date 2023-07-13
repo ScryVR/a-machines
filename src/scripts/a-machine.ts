@@ -31,8 +31,8 @@ AFRAME.registerComponent("a-machine", {
         machineRegistry[this.data.machine].listeners[globalState.selectedAction];
       if (listener) {
         listener(event, this.state, this.emitFactory(this.data.machine), globalState);
+        event.stopPropagation();
       }
-      event.stopPropagation();
     });
   },
   emitFactory(machine: string) {
