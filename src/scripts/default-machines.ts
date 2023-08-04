@@ -1,5 +1,6 @@
 import { IMachine } from "./a-machine";
 import { createFromBlueprint, select, transformMultiple, translateMultiple, unselect } from "./handleMultiselect";
+import { splitEntity } from "./splitEntity";
 import {
   deductEnergy,
   deductResources,
@@ -241,19 +242,28 @@ export const building: IMachine = {
       emit("modifiedBuilding:builtins", { el: state.el });
     },
     gridAlign: (event: any, state: Record<string, any>) => {
-      const { position, rotation } = state.el.object3D
-      state.el.object3D.position.set(
-        Math.round(position.x * 4) / 4,
-        Math.round(position.y * 4) / 4,
-        Math.round(position.z * 4) / 4,
-      )
-      const piOver4 = Math.PI / 4
-      state.el.object3D.rotation.set(
-        Math.round(rotation._x * piOver4) * piOver4,
-        Math.round(rotation._y * piOver4) / piOver4,
-        Math.round(rotation._z * piOver4) / piOver4,
-      )
+      const selected = document.querySelectorAll("[data-current-group]:not([data-unselected])")
+      const piOver8 = Math.PI / 8
+      selected.forEach((el: any) => {
+        const { position, rotation, scale } = el.object3D
+        el.object3D.position.set(
+          Math.round(position.x * 4) / 4,
+          Math.round(position.y * 4) / 4,
+          Math.round(position.z * 4) / 4,
+        )
+        el.object3D.rotation.set(
+          Math.round(rotation._x * piOver8) * piOver8,
+          Math.round(rotation._y * piOver8) / piOver8,
+          Math.round(rotation._z * piOver8) / piOver8,
+        )
+        el.object3D.scale.set(
+          Math.round(scale.x * 4) / 4,
+          Math.round(scale.y * 4) / 4,
+          Math.round(scale.z * 4) / 4,
+        )
+      })
     },
+    split: splitEntity,
     build: createNewBuilding,
     cancelBuilding: (
       event: any,
@@ -286,6 +296,12 @@ export const building: IMachine = {
       globalState: Record<string, any>
     ) => {
       state.el = state.el || document.getElementById(state.id)
+      if (event.detail.skipCosts) {
+        console.log("uh", state.el.querySelector(".selection-indicator"))
+        state.el.querySelector(".selection-indicator")?.remove()
+        emit("modifiedBuilding:builtins", { el: state.el });
+        return
+      }
       try {
         // Handle energy costs
         const { x, y, z } = state.el.object3D.scale
@@ -437,6 +453,12 @@ function createNewBuilding(
       event.detail.groupId = groupId
       createFromBlueprint(event, state, emit, globalState)
       return
+    } else {
+      event.detail.intersection.point = {
+        x: state.el.object3D.position.x,
+        y: state.el.object3D.position.y,
+        z: state.el.object3D.position.z,
+      }
     }
     tag = document.getElementById(state.id).tagName.toLowerCase().replace("a-", "")
     scale = selectedEl.object3D.scale

@@ -89,18 +89,12 @@ function createDomTouchListener(event: any) {
         <button id='done-btn'>Done</button>
         <button id='rotate-btn'>Rotate</button>
         <button id='group-btn'>Group</button>
+        <button id='split-btn'>Split</button>
         <button id='cancel-btn'>Cancel</button>
       </div>
       `;
     touchListener.querySelector("#done-btn").addEventListener("click", () => {
-      machineState.groupProxy?.setAttribute("visible", false)
-      document.querySelectorAll("[data-current-group]").forEach((el) => {
-        el.removeAttribute("data-current-group")
-        el.removeAttribute("data-unselected")
-        sendEventToTarget(el.getAttribute("id"), "doneBuilding", {});
-      })
-      touchListener.style.pointerEvents = "none";
-      touchListener.style.visibility = "hidden";
+      finishBuilding(touchListener)
     });
     touchListener.querySelector("#rotate-btn").addEventListener("click", (event: any) => {
       event.target.classList.toggle("active")
@@ -128,6 +122,12 @@ function createDomTouchListener(event: any) {
         el.setAttribute("groupId", `group-${groupId}`)
       })
       builtinRegistry.createdGroup?.listener({ detail: { group: currentGroup, groupId }})
+    })
+    touchListener.querySelector("#split-btn").addEventListener("click", () => {
+      sendEventToTarget(dragTargetId, "split", {})
+      setTimeout(() => {
+        finishBuilding(touchListener, true)
+      }, 10)
     })
     // touchListener.querySelector("#advanced-menu-btn").addEventListener("click", () => {
     //   document.querySelector(".advanced-menu").classList.toggle("visible")
@@ -189,6 +189,17 @@ function createDomTouchListener(event: any) {
   )
   touchListener.oncontextmenu = () => false
   scene.getAttribute("webxr").overlayElement.appendChild(touchListener);
+}
+
+function finishBuilding(touchListener: HTMLElement, skipCosts = false) {
+  machineState.groupProxy?.setAttribute("visible", false)
+  document.querySelectorAll("[data-current-group]").forEach((el) => {
+    el.removeAttribute("data-current-group")
+    el.removeAttribute("data-unselected")
+    sendEventToTarget(el.getAttribute("id"), "doneBuilding", { skipCosts });
+  })
+  touchListener.style.pointerEvents = "none";
+  touchListener.style.visibility = "hidden";
 }
 
 function sendEventToTarget(id: string, eventName: string, detail: any) {

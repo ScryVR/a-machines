@@ -20,7 +20,7 @@
     <a-scene webxr="overlayElement:#overlay;">
       <a-entity
         cursor="fuse: false; rayOrigin: mouse"
-        raycaster="objects: [a-machine]"
+        raycaster="objects: [a-machine], [clickable]"
       >
       </a-entity>
       <a-entity position="-1 1.5 -2.5">
@@ -30,7 +30,7 @@
       <a-entity text="color: black; align: center;" scale="2 2 2" a-machine="machine: textRenderer" position="1 2.5 -2"></a-entity>
       <a-box color="orange" a-machine="machine: textInput" position="1 1.5 -2"></a-box>
       <a-box color="cyan" a-machine="machine: building" position="4 1.5 -2"></a-box>
-      <a-box color="yellow" a-machine="machine: foundation" position="-5 0 -2" scale="4 0.3 4"></a-box>
+      <a-box color="yellow" a-machine="machine: foundation" clickable position="-5 0 -2" scale="4 0.3 4"></a-box>
     </a-scene>
   </body>
 </html>
